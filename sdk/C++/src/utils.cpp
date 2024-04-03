@@ -123,10 +123,10 @@ int get_opposite(int dir) {
 // 获取旋转后的核心点坐标
 std::pair<int, int> get_rotated_point(int x, int y, int dir_index, int rotate_dir) {
     std::pair<int, int> res = {-1, -1};
-    if(rotate_dir == CLOCKWISE_DIR) {
+    if(rotate_dir == RIGHT) {
         res = {x + 2 * d[dir_index].x, y + 2 * d[dir_index].y};
     }
-    else if(rotate_dir == ANTICLOCKWISE_DIR) {
+    else if(rotate_dir == LEFT) {
         res = {x + d[dir_index].x + d[get_opposite(get_anticlockwise(dir_index))].x, y + d[dir_index].y + d[get_opposite(get_anticlockwise(dir_index))].y};
     }
     else {
@@ -137,8 +137,8 @@ std::pair<int, int> get_rotated_point(int x, int y, int dir_index, int rotate_di
 
 int get_operation(int pdir, int cdir) {
     if(pdir == cdir) return FORWARD;
-    if(get_clockwise(pdir) == cdir) return CLRO;
-    if(get_anticlockwise(pdir) == cdir) return ATCLRO;
+    if(get_clockwise(pdir) == cdir) return CLOCKWISE_DIR;
+    if(get_anticlockwise(pdir) == cdir) return ANTICLOCKWISE_DIR;
     outFile << "ERROR: 前面的状态转移不到后面的状态" << endl;
     return -1;
 }

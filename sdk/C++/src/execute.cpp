@@ -53,40 +53,118 @@ void execute::execute_robot() {
     }
 }
 
-void execute::execute_buy() {
-//    if(boat_num < boat_max_num) buy->buy_boat(step % 2);
-//    if(robot_num < robot_max_num) buy->buy_robot(0);
-
-    // TODO 判断是否需要买船(后续封装成函数),返回值为-1表示不需要买船,返回0表示在第一个点买,返回1表示在第二个点买...
-    // int isNeedBuyBoat = fun1();
-    int isNeedBuyBoat = (money > 0 && boat_num < 1) ? step % 2 : -1;
-
-    // TODO 判断是否需要买机器人(后续封装成函数),返回值为-1表示不需要买机器人,返回0表示在第一个点买,返回1表示在第二个点买...
-    // int isNeedBuyRobot = fun2();
-    int isNeedBuyRobot = (isNeedBuyBoat == -1 && money >= 2000) ? 0 : -1 ;
-
-    if(isNeedBuyBoat != -1) {
-        outFile << "Buy boat" << endl;
-        buy->buy_boat(isNeedBuyBoat);   // TODO 买船,在那个泊位购买
-    }
-    if (isNeedBuyRobot != -1) {
-        outFile << "Buy robot" << endl;
-        buy->buy_robot(isNeedBuyRobot);       // TODO 买机器人
-
-    }
-
-}
 
 void execute::execute_boat() {
     // TODO 船的执行逻辑,其中findMbPoint()函数和move()函数里最好考虑到BFS的避障和避撞。
     for (int i = 0; i < boat_num; ++i) {
         if (boat[i]->mbx == -1 && boat[i]->mby == -1) {
-            boat[i]->set_mbp(berth[0]->x, berth[0]->y);
+             // outFile  << "Boat " << boat[i]->id << " no mb point" << endl;
+            if (boat[i]->status == 0){
+                // TODO 船没有目标，需要根据当前状态确定目标：1. 船找泊位。2. 船找出售点
+                //  TODO 方案1：如果船没有装满,船去泊位列表的下一个泊位装载货物
+                //  TODO 方案2：如果船没有装满，船去所有泊位中货物最多的泊位装载货物，并给予泊位的货物数量-船容量，其他船寻找货物最多泊位时可以不优先选他
+                //  TODO 方案3：如果船没有装满，船去泊位列表中货物最多的泊位装载货物，主要起到一个分区的左右，节省船移动时间。
+                if (boat[i]->goods_num == 0) {   // TODO 后续需要封装成去泊位的函数
+                    int mbBerthId = i == 0 ? 0 : berth_num-1;
+                    boat[i]->findMbPoint(mbBerthId, -1, berth[0]->x, berth[0]->y,0);
+
+                } else if (boat[i]->goods_num != 0) {  // TODO 后续需要封装成去交货点的函数
+                    int delivery_id = i == 0 ? 0 : delivery_point.size() -1;
+                    boat[i]->findMbPoint(-1,delivery_id, delivery_point[delivery_id].first, delivery_point[delivery_id].second, 1);
+                }
+            }
+            else if (boat[i]->status == 2) {
+                outFile  << "Boat " << boat[i]->id << " loading" << endl;
+                // TODO 是否离开港口判定。
+                // TODO 离开情况1：船已经装满了，离开前往售卖点
+                // TODO 离开情况2：快到15000帧了，提前离开前往售卖点以满足售卖时间
+                //  TODO 离开情况3：当前港口已经没有货物了，离开当前港口寻找下一个港口装载货物
+                // TODO 离开情况4：如果船装载的货物价值满足某个值，提前离开以便更早购买新的机器人或船。（如开局要多买机器人，攒够2000或其倍数先离开一趟）
+
+                int currentBerthId = boat[i]->getBerthIdByPoint();
+                if (berth[currentBerthId]->num == 0) {  // TODO 后续要封装成是否离开当前泊位的函数   boat[i]->goods_num == boat_capacity
+                    boat[i]->operation_list.push_back(DEPT_OP);
+                } else {
+                    // 先执行船舶命令，再进行装载!!!!!!!,一旦发送回到主航道的指令后续无法装载
+                    int load_num = std::min(berth[0]->num, std::min(berth[0]->loading_speed, boat_capacity - boat[i]->goods_num));
+                    boat[i]->goods_num += load_num;
+                    berth[0]->num -= load_num;
+                }
+
+
+            }
+            else if (boat[i]->status == 1) {
+                // 无法操作,pass
+            }
+        }
+        outFile << "Boat " << boat[i]->id << " begin move" << endl;
+        boat[i]->move();
+        outFile << "Boat " << boat[i]->id << " move done" << endl;
+
+    }
+    /*
+    for (int i = 0; i < boat_num; ++i) {
+        if (boat[i]->mbx == -1 && boat[i]->mby == -1) {
+            outFile << "Boat " << boat[i]->id << " no mb point" << endl;
             // TODO 船没有目标，需要根据当前状态确定目标：1. 船找泊位。2. 船找出售点
-            // TODO findMbPoint(boat[i]->id);
+            if (boat[i]->goods_num == 0) {
+                outFile << "Boat " << boat[i]->id << " no goods" << endl;
+                boat[i]->findMbBerthPointById(berth[0]->id);
+            } else if (boat[i]->goods_num == boat_capacity) {
+                outFile << "Boat " << boat[i]->id << " full" << endl;
+                boat[i]->set_mbp(delivery_point[0].first, delivery_point[0].second);               // TODO findMbPoint(boat[i]->id);
+            }
+
         }
         else {
             // TODO 船有目标，需要根据当前状态确定下一步行动：1. 船移动。2. 船装货。3. 船卸货
+            // if (boat[i]->x == boat[i]->mbx && boat[i]->y == boat[i]->mby) {  // 船在目标点
+            if (boat[i]->x >= berth[0]->klux &&  boat[i]->x <= berth[0]->krdx
+                && boat[i]->y >= berth[0]->kluy && boat[i]->y <= berth[0]->krdy) {  // 船在目标点
+                outFile << "Boat " << boat[i]->id << " in mb point" << endl;
+                if (boat[i]->x >= berth[0]->klux &&  boat[i]->x <= berth[0]->krdx
+                && boat[i]->y >= berth[0]->kluy && boat[i]->y <= berth[0]->krdy) {  // 船在泊位 TODO 判断
+                    outFile << "Boat " << boat[i]->id << " in berth" << endl;
+                    if (boat[i]->status == 0 && boat[i]->goods_num == 0) {
+                        outFile << "Boat " << boat[i]->id << " exec berth op" << endl;
+                        boat[i]->exec(BERTH_OP);
+                    }
+                    else if (boat[i]->status == 2){
+                        int load_num = std::min(berth[0]->num,   std::min(berth[0]->loading_speed, boat_capacity - boat[i]->goods_num));
+                        if (berth[0]->num != 0) {
+                            outFile << "Berth " << berth[0]->id << " load " << load_num << " goods" << endl;
+                        } else {
+                            outFile << "Berth " << berth[0]->id << " load nothing" << endl;
+                        }
+                        if (load_num != 0) {
+                            outFile << "Boat " << boat[i]->id << " load " << load_num << " goods" << endl;
+                        } else{
+                            outFile << "Boat " << boat[i]->id << " load nothing" << endl;
+                        }
+                        boat[i]->goods_num += load_num;
+                        berth[0]->num -= load_num;
+                        if (boat[i]->goods_num == 10) {
+                            outFile <<  "Boat " << boat[i]->id << " exec dept op" << endl;
+                            boat[i]->exec(DEPT_OP);
+                        }
+                    }
+                    else if(boat[i]->status == 0 &&  boat[i]->goods_num >= 5){
+                        boat[i]->set_mbp(delivery_point[0].first, delivery_point[0].second);
+                        boat[i]->navigation();
+                    }
+                    // TODO 判断泊位是否有货物 printf("berth 0\n");
+
+                    // TODO 船装货,更新泊位货物数量和船的数量(注意需要考虑船靠泊的时候的状态)
+
+
+                } else if(boat[i]->x == delivery_point[0].first && boat[i]->y == delivery_point[0].second){ // 船在交货点  TODO 判断
+                    outFile << "Boat " << boat[i]->id << " in delivery point" << endl;
+                    boat[i]->goods_num = 0;
+                    boat[i]->mbx = -1;
+                    boat[i]->mby = -1;
+                    boat[i]->mbdir = -1;
+                }
+            }
             // if 船在目标点
                 // if 船在泊位
                     // TODO 船装货,更新泊位货物数量和船的数量(注意需要考虑船靠泊的时候的状态)
@@ -102,6 +180,90 @@ void execute::execute_boat() {
                     // boat[i]->mbdir = -1;
                     // TODO findMbPoint(boat[i]->id);
         }
+
+        // TODO 朝目标点移动,如果目标点为-1则不移动,如果当前位置和方向与目标点一致(x=mbx, y=mby, dir=mbdir则不移动)
+        // TODO boat[i]->move();  // 船朝目标点移动: dept、berth、rot、ship
+        outFile << "Boat " << boat[i]->id << " begin move" << endl;
+        boat[i]->move();
+        outFile << "Boat " << boat[i]->id << " move done" << endl;
+    }
+     */
+}
+/*
+void execute::execute_boat() {
+    // TODO 船的执行逻辑,其中findMbPoint()函数和move()函数里最好考虑到BFS的避障和避撞。
+    for (int i = 0; i < boat_num; ++i) {
+        if (boat[i]->mbx == -1 && boat[i]->mby == -1) {
+            // TODO 船没有目标，需要根据当前状态确定目标：1. 船找泊位。2. 船找出售点
+            if (boat[i]->goods_num == 0) {
+
+
+                boat[i]->set_mbp(berth[0]->x, berth[0]->y);               // TODO findMbPoint(boat[i]->id);
+
+
+
+            } else if (boat[i]->goods_num == boat_capacity) {
+                boat[i]->set_mbp(delivery_point[0].first, delivery_point[0].second);               // TODO findMbPoint(boat[i]->id);
+            }
+
+        }
+        else {
+            // TODO 船有目标，需要根据当前状态确定下一步行动：1. 船移动。2. 船装货。3. 船卸货
+            if (boat[i]->x == boat[i]->mbx && boat[i]->y == boat[i]->mby) {  // 船在目标点
+                outFile << "Boat " << boat[i]->id << " in mb point" << endl;
+                if (boat[i]->x == berth[0]->x && boat[i]->y == berth[0]->y) {  // 船在泊位 TODO 判断
+                    outFile << "Boat " << boat[i]->id << " in berth" << endl;
+
+                    // TODO 判断泊位是否有货物 printf("berth 0\n");
+
+                    // TODO 船装货,更新泊位货物数量和船的数量(注意需要考虑船靠泊的时候的状态)
+                    int load_num = std::min(berth[0]->num,   std::min(berth[0]->loading_speed, boat_capacity - boat[i]->goods_num));
+                    if (berth[0]->num != 0) {
+                        outFile << "Berth " << berth[0]->id << " load " << load_num << " goods" << endl;
+                    } else {
+                        outFile << "Berth " << berth[0]->id << " load nothing" << endl;
+                    }
+                    if (load_num != 0) {
+                        outFile << "Boat " << boat[i]->id << " load " << load_num << " goods" << endl;
+                    } else{
+                        outFile << "Boat " << boat[i]->id << " load nothing" << endl;
+                    }
+                    boat[i]->goods_num += load_num;
+                    berth[0]->num -= load_num;
+                    if (boat[i]->goods_num == 10) {
+                        outFile << "Boat " << boat[i]->id << " full" << endl;
+                        boat[i]->mbx = -1;
+                        boat[i]->mby = -1;
+                        boat[i]->mbdir = -1;
+                        boat[i]->set_mbp(delivery_point[0].first, delivery_point[0].second);    // TODO findMbPoint(boat[i]->id);
+                    }
+
+                } else if(boat[i]->x == delivery_point[0].first && boat[i]->y == delivery_point[0].second){ // 船在交货点  TODO 判断
+                    outFile << "Boat " << boat[i]->id << " in delivery point" << endl;
+                    boat[i]->goods_num = 0;
+                    boat[i]->mbx = -1;
+                    boat[i]->mby = -1;
+                    boat[i]->mbdir = -1;
+
+                    boat[i]->set_mbp(berth[0]->x, berth[0]->y);    // TODO findMbPoint(boat[i]->id);
+                }
+            }
+            // if 船在目标点
+                // if 船在泊位
+                    // TODO 船装货,更新泊位货物数量和船的数量(注意需要考虑船靠泊的时候的状态)
+                    // if (装满了，或者达到某种需要走的条件)更新目标点(mbx=-1, mby=-1,mbdir=-1),并重新根据当前状态找寻目标findMbPoint(boat[i]->id);
+                    //     boat[i]->mbx = -1;
+                    //     boat[i]->mby = -1;
+                    //     boat[i]->mbdir = -1;
+                        // TODO findMbPoint(boat[i]->id);
+                // else if 船在出售点
+                    // 船卸货,并且更新目标点(mbx=-1, mby=-1, mbdir=-1),并重新根据当前状态找寻目标findMbPoint(boat[i]->id)
+                    // boat[i]->mbx = -1;
+                    // boat[i]->mby = -1;
+                    // boat[i]->mbdir = -1;
+                    // TODO findMbPoint(boat[i]->id);
+        }
+
         // TODO 朝目标点移动,如果目标点为-1则不移动,如果当前位置和方向与目标点一致(x=mbx, y=mby, dir=mbdir则不移动)
         // TODO boat[i]->move();  // 船朝目标点移动: dept、berth、rot、ship
         outFile << "Boat " << boat[i]->id << " begin move" << endl;
@@ -109,6 +271,41 @@ void execute::execute_boat() {
         outFile << "Boat " << boat[i]->id << " move done" << endl;
     }
 }
+ */
+
+void execute::execute_buy() {
+    // TODO 判断是否需要买船(后续封装成函数),返回值为-1表示不需要买船,返回0表示在第一个点买,返回1表示在第二个点买...
+    //  TODO 判断是否需要买船，根据船的周期计算出船一趟可以运多少货物，根据机器人平均运货距离得到这个周期之内可以运输多少货物，如果超过该船的上限则增加船。
+    // int isNeedBuyBoat = fun1();
+    int isNeedBuyBoat = -1;
+    int isNeedBuyRobot = -1;
+
+    if (money >= 8000) {
+        if (boat_num < 1) {
+            isNeedBuyBoat = 0;  // TODO 开局买一艘船,具体在哪买待确定
+        } else if (robot_num >= robot_max_num &&  boat_num < boat_max_num) {
+            isNeedBuyBoat = boat_purchase_point.size() - 1;  // TODO 后面买的船,具体在哪买待确定
+        }
+    }
+    // TODO 判断是否需要买机器人(后续封装成函数),返回值为-1表示不需要买机器人,返回0表示在第一个点买,返回1表示在第二个点买...
+    // TODO 判断机器人运货比例，如果[1-（机器人平均运货价值/时间）/（货物平均生成价值 /时间）]*参数（例15000）>机器人价格 &&船没有达到运输能力的上限，购买新机器人
+    //  TODO 还可以加几种不同的方式到时候试试。
+    if(money >= 2000 && isNeedBuyBoat == -1 && robot_num < robot_max_num) {
+        isNeedBuyRobot = step % robot_purchase_point.size() ;  // TODO 买机器人,具体在哪买待确定
+    }
+
+    if(isNeedBuyBoat != -1) {
+        buy->buy_boat(isNeedBuyBoat);
+    }
+    if (isNeedBuyRobot != -1) {
+        outFile << isNeedBuyBoat <<" " << isNeedBuyRobot << endl;
+        buy->buy_robot(isNeedBuyRobot);
+    }
+
+}
+
+
+
 
 
 
