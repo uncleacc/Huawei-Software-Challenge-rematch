@@ -1,0 +1,36 @@
+cmake_minimum_required (VERSION 3.8)
+project(CodeCraftSDK)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_EXE_LINKER_FLAGS -static)
+
+if (!WIN32)
+    link_libraries(pthread rt m)
+endif (!WIN32)
+
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(EXECUTABLE_NAME main)
+set(SOURCE_DIR src)
+
+include_directories(
+        include
+        .
+)
+add_executable(${EXECUTABLE_NAME}
+        ./main.cpp
+        ${SOURCE_DIR}/berth.cpp
+        ${SOURCE_DIR}/boat.cpp
+        ${SOURCE_DIR}/robot.cpp
+        ${SOURCE_DIR}/utils.cpp
+        ${SOURCE_DIR}/Debug.cpp
+        ${SOURCE_DIR}/Buy.cpp
+        ${SOURCE_DIR}/execute.cpp
+        Coordinate.cpp
+        Coordinate.h
+)
+
+# 设置编译输出路径
+set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build
+)
