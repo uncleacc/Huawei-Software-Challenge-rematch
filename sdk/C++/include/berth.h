@@ -13,6 +13,10 @@ public:
     bool lastTransport;  // 泊位是否是最后一次运输
     int lux, luy, rdx, rdy;       // 泊位左上角和右下角坐标
 
+    int klux, kluy, krdx, krdy;   // 靠泊区左上角和右下角坐标
+
+
+
 public:
     Berth();
 

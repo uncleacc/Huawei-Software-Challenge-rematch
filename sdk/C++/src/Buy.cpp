@@ -10,30 +10,32 @@ Buy::~Buy() {
 
 bool Buy::buy_robot(int idx) {
     if (money < robot_price) {
-//        debug->error("Not enough money to buy robot");
+        outFile <<"step" << step << " Not enough money to buy robot" << endl;
         return false;
     }
     int x = robot_purchase_point[idx].first, y = robot_purchase_point[idx].second;
     printf("lbot %d %d\n", robot_purchase_point[idx].first, robot_purchase_point[idx].second);
-    outFile << "lbot " << robot_purchase_point[idx].first << " " << robot_purchase_point[idx].second << endl;
     money -= robot_price;
     robot_num++;
     robot[robot_num - 1] = new Robot(x, y);
     originalPosition[{x, y}] = 'R';
+    outFile <<"step" << step << " Buy Robot" << boat_num - 1 << " in " << idx
+            << " robot_purchase_point ("<< robot_purchase_point[idx].first << "," << robot_purchase_point[idx].second << ")" << endl;
     return true;
 }
 
 bool Buy::buy_boat(int idx) {
     if (money < boat_price) {
-//        debug->error("Not enough money to buy boat");
+        outFile <<"step" << step << " Not enough money to buy boat" << endl;
         return false;
     }
-    outFile << "idx:" << idx << endl;
     int x = boat_purchase_point[idx].first, y = boat_purchase_point[idx].second;
     printf("lboat %d %d\n", x, y);
     money -= boat_price;
     boat_num++;
     boat[boat_num - 1] = new Boat(x, y);
+    outFile <<"step" << step << " Buy Boat" << boat_num - 1 << " in " << idx
+        << " boat_purchase_point ("<< boat_purchase_point[idx].first << "," << boat_purchase_point[idx].second << ")" << endl;
     return true;
 }
 

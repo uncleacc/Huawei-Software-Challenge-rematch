@@ -22,13 +22,23 @@
 
 #define CLOCKWISE_DIR 0
 #define ANTICLOCKWISE_DIR 1
+
+/**
+ * 轮船当前行经方向
+ */
 #define LEFT 1
 #define RIGHT 0
 #define UP 2
 #define DOWN 3
-#define FORWARD 0
-#define CLRO 2      // 顺时针
-#define ATCLRO 1     // 逆时针
+
+/**
+ * 轮船运动操作
+ */
+#define CLOCKWISE_DIR 0  // 顺时针
+#define ANTICLOCKWISE_DIR 1  // 逆时针
+#define FORWARD 2   // 前进
+#define DEPT_OP 3   // 尝试将对应船位置重置到主航道上，会导致船进入恢复状态。
+#define BERTH_OP 4  // 尝试将对应船位置重置到船坞上，会导致船进入恢复状态。
 
 using namespace std;
 
@@ -36,10 +46,10 @@ const int n = 200;
 const int N = 210;
 const int M = 100;
 const int boat_price = 8000, robot_price = 2000;
+
 const int robot_max_num = 10;
-const int boat_max_num = 5;
-// const int CLOCKWISE_DIR = 0;
-// const int ANTICLOCKWISE_DIR = 1;
+const int boat_max_num = 2;
+
 
 extern int robot_num, boat_num, berth_num;
 extern int money, boat_capacity, step;
@@ -60,12 +70,19 @@ struct Dir {
     }
 };
 
-struct boat_sport_status{
-    int x, y, dir, dis;
-    bool operator<(const boat_sport_status &b) const {
-        return dis > b.dis;
+
+/*
+ * A*算法的运动节点
+ */
+struct boat_sport_node{
+    int x, y, dir;  // 当前点坐标，当前方向
+    int gCost;  // 起始点到当前点的实际代价
+    int hCost;  // 从当前点到目标点的预估代价----曼哈顿距离
+    bool operator<(const boat_sport_node &b) const {
+        return gCost + hCost > b.gCost + b.hCost;
     }
 };
+
 
 extern Dir d[4];
 
@@ -85,6 +102,5 @@ extern vector<pair<int, int>> robot_purchase_point;
 extern vector<pair<int, int>> boat_purchase_point;
 extern vector<pair<int, int>> delivery_point;
 extern bool boat_vis[n][n][5];
-extern boat_sport_status boat_path[n][n][4];
-
+extern boat_sport_node  boat_node_path[n][n][4];
 #endif
