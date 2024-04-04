@@ -64,11 +64,20 @@ void execute::execute_boat() {
                 //  TODO 方案1：如果船没有装满,船去泊位列表的下一个泊位装载货物
                 //  TODO 方案2：如果船没有装满，船去所有泊位中货物最多的泊位装载货物，并给予泊位的货物数量-船容量，其他船寻找货物最多泊位时可以不优先选他
                 //  TODO 方案3：如果船没有装满，船去泊位列表中货物最多的泊位装载货物，主要起到一个分区的左右，节省船移动时间。
-                if (boat[i]->goods_num == 0) {   // TODO 后续需要封装成去泊位的函数
-                    int mbBerthId = i == 0 ? 0 : berth_num-1;
-                    boat[i]->findMbPoint(mbBerthId, -1, berth[0]->x, berth[0]->y,0);
+                if (boat[i]->goods_num <= boat_capacity - 2) {   // TODO 后续需要封装成去泊位的函数
 
-                } else if (boat[i]->goods_num != 0) {  // TODO 后续需要封装成去交货点的函数
+                    int maxBerthId = boat[i]->berthBoard[0];
+                    int maxBerthGoodsNum = berth[maxBerthId]->num;
+                    for (int j = 1; j < boat[i]->berthBoard.size(); j++) {
+                        if (berth[boat[i]->berthBoard[j]]->num > maxBerthGoodsNum) {
+                            outFile << "Boat " << boat[i]->id << " find new berth " << boat[i]->berthBoard[j] << endl;
+                            maxBerthId = boat[i]->berthBoard[j];
+                            maxBerthGoodsNum = berth[maxBerthId]->num;
+                        }
+                    }
+                    boat[i]->findMbPoint(maxBerthId, -1, berth[maxBerthId]->x, berth[maxBerthId]->y,0);
+
+                } else if (boat[i]->goods_num > boat_capacity - 2) {  // TODO 后续需要封装成去交货点的函数
                     int delivery_id = i == 0 ? 0 : delivery_point.size() -1;
                     boat[i]->findMbPoint(-1,delivery_id, delivery_point[delivery_id].first, delivery_point[delivery_id].second, 1);
                 }
@@ -82,13 +91,13 @@ void execute::execute_boat() {
                 // TODO 离开情况4：如果船装载的货物价值满足某个值，提前离开以便更早购买新的机器人或船。（如开局要多买机器人，攒够2000或其倍数先离开一趟）
 
                 int currentBerthId = boat[i]->getBerthIdByPoint();
-                if (berth[currentBerthId]->num == 0) {  // TODO 后续要封装成是否离开当前泊位的函数   boat[i]->goods_num == boat_capacity
+                if (berth[currentBerthId]->num == 0 || boat[i]->goods_num >= boat_capacity - 1 || step >= 14700) {  // TODO 后续要封装成是否离开当前泊位的函数   boat[i]->goods_num == boat_capacity
                     boat[i]->operation_list.push_back(DEPT_OP);
                 } else {
                     // 先执行船舶命令，再进行装载!!!!!!!,一旦发送回到主航道的指令后续无法装载
-                    int load_num = std::min(berth[0]->num, std::min(berth[0]->loading_speed, boat_capacity - boat[i]->goods_num));
+                    int load_num = std::min(berth[currentBerthId]->num, std::min(berth[currentBerthId]->loading_speed, boat_capacity - boat[i]->goods_num));
                     boat[i]->goods_num += load_num;
-                    berth[0]->num -= load_num;
+                    berth[currentBerthId]->num -= load_num;
                 }
 
 

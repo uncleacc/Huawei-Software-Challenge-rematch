@@ -47,7 +47,7 @@ const int N = 210;
 const int M = 100;
 const int boat_price = 8000, robot_price = 2000;
 
-const int robot_max_num = 10;
+const int robot_max_num = 15;
 const int boat_max_num = 2;
 
 

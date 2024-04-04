@@ -34,6 +34,15 @@ bool Buy::buy_boat(int idx) {
     money -= boat_price;
     boat_num++;
     boat[boat_num - 1] = new Boat(x, y);
+    // TODO 给船赋予可去的区间
+    if (idx == 0) {
+        boat[boat_num - 1]->berthBoard.push_back(0);
+        boat[boat_num - 1]->berthBoard.push_back(1);
+    } else {
+        boat[boat_num - 1]->berthBoard.push_back(2);
+        boat[boat_num - 1]->berthBoard.push_back(3);
+        boat[boat_num - 1]->berthBoard.push_back(4);
+    }
     outFile <<"step" << step << " Buy Boat" << boat_num - 1 << " in " << idx
         << " boat_purchase_point ("<< boat_purchase_point[idx].first << "," << boat_purchase_point[idx].second << ")" << endl;
     return true;

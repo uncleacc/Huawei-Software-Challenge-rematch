@@ -12,6 +12,10 @@ Boat::Boat() {
     mby = -1;
     mbdir = -1;
 
+
+
+
+
 }
 
 Boat::Boat(int x, int y) {
@@ -128,6 +132,7 @@ bool Boat::navigation() {
         }
 
     }
+    return false;
 }
 /*
 bool Boat::navigation() {
@@ -330,8 +335,7 @@ bool Boat::findMbPoint(int berth_id, int DeliveryPointId, int oriMbx, int oriMby
         }
 
     }
-
-
+    return true;
 }
 
 
