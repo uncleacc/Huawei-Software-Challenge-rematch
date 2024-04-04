@@ -78,7 +78,9 @@ void execute::execute_boat() {
                     boat[i]->findMbPoint(maxBerthId, -1, berth[maxBerthId]->x, berth[maxBerthId]->y,0);
 
                 } else if (boat[i]->goods_num > boat_capacity - 2) {  // TODO 后续需要封装成去交货点的函数
-                    int delivery_id = i == 0 ? 0 : delivery_point.size() -1;
+                    // int delivery_id = i == 0 ? 0 : delivery_point.size() -1;  // map1
+                    int delivery_id = i == 0 ? delivery_point.size() -1 : 0;  // map2
+
                     boat[i]->findMbPoint(-1,delivery_id, delivery_point[delivery_id].first, delivery_point[delivery_id].second, 1);
                 }
             }

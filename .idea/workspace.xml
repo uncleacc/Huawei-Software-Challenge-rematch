@@ -21,13 +21,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e0f2476e-631b-4a60-941a-436a73844972" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out.txt" beforeDir="false" afterPath="$PROJECT_DIR$/out.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sdk/C++/include/boat.h" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/include/boat.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sdk/C++/include/globals.h" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/include/globals.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sdk/C++/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/main.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sdk/C++/src/Buy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/src/Buy.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sdk/C++/src/boat.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/src/boat.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sdk/C++/src/execute.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/src/execute.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -91,7 +87,7 @@
       <option name="presentableId" value="Default" />
       <updated>1712155284170</updated>
       <workItem from="1712155286186" duration="3011000" />
-      <workItem from="1712203437264" duration="3634000" />
+      <workItem from="1712203437264" duration="8829000" />
     </task>
     <servers />
   </component>
