@@ -1,3 +1,4 @@
+#include <thread>
 #include "globals.h"
 using namespace std;
 
@@ -203,10 +204,17 @@ void update(int step) {
         }
     }
 }
-
-
+int threadNum = 0;
+void thread_1() {
+    outFile << "子线程1  begin" << endl;
+    this_thread::sleep_for(chrono::milliseconds(20 * 10));
+    threadNum = 100;
+    outFile << "子线程1  end" << endl;
+}
 int main() {
     Init();
+
+
     // TODO 跳帧判断
     while (scanf("%d", &step) != EOF) {
         outFile << endl << "step: " << step << " begin" << endl;
@@ -238,7 +246,15 @@ int main() {
 
         puts("OK");
         fflush(stdout);
+
+
+        if (step == 15000) {
+            for (int i = 0; i <berth_num; i++) {
+                outFile << "berth[" << i << "]  point:(" << berth[i]->x << " " << berth[i]->y << ") num:" << berth[i]->num << " price:" << berth[i]->price << endl;
+            }
+        }
     }
     outFile.close();
     return 0;
 }
+
