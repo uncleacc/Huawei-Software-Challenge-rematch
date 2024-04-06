@@ -16,13 +16,12 @@ int gds[N][N], goods_vanish_time[N][N];
 int all_goods_cnt;
 long long all_goods_val;
 
-
-
 /**
  * 地图信息，轮船专用定义区
  */
 vector<pair<int, int>> delivery_point;   // 轮船的货物交货点
 std::map<std::pair<int, int>, bool> slow_points;  // 轮船的慢速行驶点
+bitset<15001> exist_obstacle[N][N]; // 避撞的障碍物信息
 
 
 /**
@@ -44,14 +43,14 @@ Boat *boat[M];
 Berth *berth[M];
 Buy *buy;
 
-std::ofstream outFile;
+Debug info(LogLevel::INFO);
+Debug warn(LogLevel::WARNING);
+Debug error(LogLevel::ERROR);
 
-Dir d[4] = {{0,  1},   // 右
-            {0,  -1},  // 左
-            {-1, 0},  // 下
-            {1,  0}};  // 上
-
-Debug *debug;
+Dir d[4] = {{0,  1},    // 右
+            {0,  -1},   // 左
+            {-1, 0},    // 下
+            {1,  0}};   // 上
 
 /**
  * 对输入的地图信息数据进行预处理
@@ -60,10 +59,8 @@ void ProcessMap() {
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
             if (grid[i][j] == 'R')
-                // buy->append_robot_point(i, j);
                 robot_purchase_point.push_back(make_pair(i, j));
             else if (grid[i][j] == 'S')
-                // buy->append_boat_point(i, j);
                 boat_purchase_point.push_back(make_pair(i, j));
             else if (grid[i][j] == 'T')
                 delivery_point.push_back(make_pair(i, j));
@@ -133,16 +130,9 @@ void ProcessMap() {
  * 项目初始化
  */
 void Init() {
-
     exec = new execute();
-//    debug = new Debug();
     buy = new Buy();
 
-    outFile.open("out.txt", ios::out);
-    if (!outFile) {
-        std::cout << "open file error" << endl;
-        exit(1);
-    }
     for (int i = 0; i < n; i++) {
         scanf("%s", grid[i]);
     }
@@ -152,11 +142,11 @@ void Init() {
     }
     for (int i = 0; i < berth_num; i++) {
         scanf("%d%d%d%d", &berth[i]->id, &berth[i]->x, &berth[i]->y, &berth[i]->loading_speed);
-        outFile << "berth[" << i << "]:" << berth[i]->id << " " << berth[i]->x << " " << berth[i]->y << " " << berth[i]->loading_speed << endl;
+        info << "berth[" << i << "]:" << berth[i]->id << " " << berth[i]->x << " " << berth[i]->y << " " << berth[i]->loading_speed << endl;
     }
     ProcessMap();  // 对地图进行预处理
     scanf("%d", &boat_capacity);
-    outFile  << "boat_capacity:" << boat_capacity << endl;
+    info  << "boat_capacity:" << boat_capacity << endl;
     char okk[100];
     scanf("%s", okk);
     printf("OK\n");
@@ -185,13 +175,12 @@ void Input() {
     scanf("%d", &boat_num);
     for (int i = 0; i < boat_num; i++) {
         scanf("%d%d%d%d%d%d\n", &boat[i]->id, &boat[i]->goods_num, &boat[i]->x, &boat[i]->y, &boat[i]->dir, &boat[i]->status);
-        outFile << "boat[" << i << "]:" << boat[i]->id << " " << boat[i]->goods_num << " " << boat[i]->x << " " << boat[i]->y << " " << boat[i]->dir << " " << boat[i]->status << endl;
+        info << "boat[" << i << "]:" << boat[i]->id << " " << boat[i]->goods_num << " " << boat[i]->x << " " << boat[i]->y << " " << boat[i]->dir << " " << boat[i]->status << endl;
     }
 
     char okk[100];
     scanf("%s", okk);
 }
-
 
 void update(int step) {
     for (int i = 0; i < n; i++) {
@@ -204,57 +193,58 @@ void update(int step) {
         }
     }
 }
+
 int threadNum = 0;
 void thread_1() {
-    outFile << "子线程1  begin" << endl;
+    info << "子线程1  begin" << endl;
     this_thread::sleep_for(chrono::milliseconds(20 * 10));
     threadNum = 100;
-    outFile << "子线程1  end" << endl;
+    info << "子线程1  end" << endl;
 }
+
 int main() {
     Init();
 
-
-    // TODO 跳帧判断
+    int preStep = 0;
     while (scanf("%d", &step) != EOF) {
-        outFile << endl << "step: " << step << " begin" << endl;
+        info << step << " " << preStep << endl;
+        if(step - preStep > 1) {
+            error << "跳帧: " << step - preStep << endl;
+        }
+        preStep = step;
+
+        info << endl << "step: " << step << " begin" << endl;
 
         // 输入
         Input();
-        outFile << "input done" << endl;
-
 
         // 更新
         update(step);
-        outFile << "update done" << endl;
-
 
         // 执行机器人指令
+        info << "execute robot begin" << endl;
         exec->execute_robot();
-        outFile << "execute robot done" << endl;
+        info << "execute robot done" << endl;
 
         // 执行轮船指令
+        info << "execute boat begin" << endl;
         exec->execute_boat();
-        outFile << "execute boat done" << endl;
+        info << "execute boat done" << endl;
 
         // 执行购买指令
+        info << "execute buy begin" << endl;
         exec->execute_buy();
-        outFile << "execute buy done" << endl;
+        info << "execute buy done" << endl;
 
-        outFile << "boat_num:"<< boat_num << " robot_num:" << robot_num << endl;
-        outFile << "step: " << step << " end" << endl;
+        info << "boat_num:"<< boat_num << " robot_num:" << robot_num << endl;
+        info << "step: " << step << " end" << endl;
 
         puts("OK");
         fflush(stdout);
-
-
-        if (step == 15000) {
-            for (int i = 0; i <berth_num; i++) {
-                outFile << "berth[" << i << "]  point:(" << berth[i]->x << " " << berth[i]->y << ") num:" << berth[i]->num << " price:" << berth[i]->price << endl;
-            }
-        }
     }
-    outFile.close();
+
+    for (int i = 0; i < berth_num; i++) {
+        info << "berth[" << i << "]  point:(" << berth[i]->x << " " << berth[i]->y << ") num:" << berth[i]->num << " price:" << berth[i]->price << endl;
+    }
     return 0;
 }
-

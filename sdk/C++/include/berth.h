@@ -2,9 +2,15 @@
 #define BERTH_H
 
 class Berth {
+
+public:
+    Berth();
+
+    void close();
+    void set_locked(bool locked);
+
 public:
     int x, y;            // 泊位左上角坐标
-    int transport_time;  // 运输时间
     int loading_speed;   // 装载速度
     int num;             // 泊位货物数量
     int price;           // 泊位货物价值
@@ -14,13 +20,7 @@ public:
     int lux, luy, rdx, rdy;       // 泊位左上角和右下角坐标
 
     int klux, kluy, krdx, krdy;   // 靠泊区左上角和右下角坐标
-
-
-
-public:
-    Berth();
-
-    void close();
+    bool is_locked;        //有船要来
 };
 
 #endif

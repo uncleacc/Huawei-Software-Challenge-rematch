@@ -86,7 +86,7 @@ void Robot::put_good(int ts) {
     if (goods == 0) {
         return;
     }
-    outFile << "机器人:" << id << " " << getBerthId() << endl;
+    info << "机器人:" << id << " " << getBerthId() << endl;
     int berth_id = getBerthId();
     berth[berth_id]->num++;
     berth[berth_id]->history_cnt ++;

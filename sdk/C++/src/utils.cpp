@@ -2,6 +2,15 @@
 #include "globals.h"
 #include <queue>
 
+// 获取当前时间
+std::string getCurrentTime() {
+    time_t now = time(0);
+    tm* localTime = localtime(&now);
+    char buffer[80];
+    strftime(buffer, 80, "%m-%d.%H.%M.%S", localTime);
+    return buffer;
+}
+
 // 检测是否越界
 bool check(int x, int y) {
     return x >= 0 && x < n && y >= 0 && y < n;
@@ -66,8 +75,11 @@ bool check_robot_can_loc(int x, int y) {
     return false;
 }
 
-bool check_boat_can_loc(int x, int y) {
+bool check_boat_can_loc(int x, int y, int ts) {
     if(!check(x, y)) return false;
+    if(exist_obstacle[x][y].test(ts) == 1) {
+        return false;
+    }
     if( grid[x][y] == '*'
         || grid[x][y] == '~'
         || grid[x][y] == 'C'
@@ -81,7 +93,7 @@ bool check_boat_can_loc(int x, int y) {
     return false;
 }
 
-bool can_place_boat(int x, int y, int idx) {
+bool can_place_boat(int x, int y, int idx, int ts) {
     std::vector<pair<int, int>> points;
     points.push_back({x, y});
     points.push_back({x + d[idx].x, y + d[idx].y});
@@ -91,7 +103,7 @@ bool can_place_boat(int x, int y, int idx) {
     points.push_back({nx + d[idx].x, ny + d[idx].y});
     points.push_back({nx + 2 * d[idx].x, ny + 2 * d[idx].y});
     for(int i = 0; i < points.size(); i++) {
-        if(!check_boat_can_loc(points[i].first, points[i].second)) return false;
+        if(!check_boat_can_loc(points[i].first, points[i].second, ts)) return false;
     }
     return true;
 }
@@ -130,16 +142,16 @@ std::pair<int, int> get_rotated_point(int x, int y, int dir_index, int rotate_di
         res = {x + d[dir_index].x + d[get_opposite(get_anticlockwise(dir_index))].x, y + d[dir_index].y + d[get_opposite(get_anticlockwise(dir_index))].y};
     }
     else {
-        outFile << "ERROR: 错误的旋转方向" << endl;
+        error << "错误的旋转方向" << endl;
     }
     return res;
 }
 
 int get_operation(int pdir, int cdir) {
-    if(pdir == cdir) return FORWARD;
-    if(get_clockwise(pdir) == cdir) return CLOCKWISE_DIR;
-    if(get_anticlockwise(pdir) == cdir) return ANTICLOCKWISE_DIR;
-    outFile << "ERROR: 前面的状态转移不到后面的状态" << endl;
+    if(pdir == cdir) return FORWARD_OP;
+    if(get_clockwise(pdir) == cdir) return CLOCKWISE_DIR_OP;
+    if(get_anticlockwise(pdir) == cdir) return ANTICLOCKWISE_DIR_OP;
+    error << "前面的状态转移不到后面的状态" << endl;
     return -1;
 }
 
@@ -152,8 +164,51 @@ bool check_boat_loc_slow(int x, int y, int idx) {
     points.push_back({nx, ny});
     points.push_back({nx + d[idx].x, ny + d[idx].y});
     points.push_back({nx + 2 * d[idx].x, ny + 2 * d[idx].y});
+    bool res = false;
     for(int i = 0; i < points.size(); i++) {
-        if(slow_points.find({points[i].first, points[i].second}) != slow_points.end()) return true;
+        if(check(points[i].first, points[i].second) == false) return false;
+        if(slow_points.find({points[i].first, points[i].second}) != slow_points.end()) res = true;
+    }
+    return res;
+}
+
+void set_obstacle(int x, int y, int dir, int ts) {
+    std::vector<pair<int, int>> points;
+    points.push_back({x, y});
+    points.push_back({x + d[dir].x, y + d[dir].y});
+    points.push_back({x + 2 * d[dir].x, y + 2 * d[dir].y});
+    int nx = x + d[get_clockwise(dir)].x, ny = y + d[get_clockwise(dir)].y;
+    points.push_back({nx, ny});
+    points.push_back({nx + d[dir].x, ny + d[dir].y});
+    points.push_back({nx + 2 * d[dir].x, ny + 2 * d[dir].y});
+    for(int i = 0; i < points.size(); i++) {
+        // info << "set_obstacle: " << points[i].first << " " << points[i].second << " " << ts << endl;
+        exist_obstacle[points[i].first][points[i].second].set(ts);
+    }
+}
+
+void open_berth(int berth_id) {
+    berth[berth_id]->set_locked(false);
+    for(int i = 0; i < boat_num; i++) {
+        boat[i]->add_berth(berth_id);
+    }
+}
+
+void close_berth(int berth_id) {
+    for(int i = 0; i < boat_num; i++) {
+        boat[i]->remove_berth(berth_id);
+    }
+}
+
+/**
+ * (x, y)是否是berth[berth_id]的靠泊区
+ */
+bool locate_berth_area(int x, int y, int berth_id) {
+    if (berth[berth_id]->klux <= x && berth[berth_id]->kluy <= y
+        && berth[berth_id]->krdx >= x  && berth[berth_id]->krdy>= y
+        ) {
+
+        return true;
     }
     return false;
 }
