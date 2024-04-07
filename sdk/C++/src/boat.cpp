@@ -10,7 +10,7 @@ Boat::Boat() {
     dir = 0;
     mbx = -1;
     mby = -1;
-    stepCompensate = 0;
+    // stepCompensate = 0;
 }
 
 Boat::Boat(int x, int y) {
@@ -20,7 +20,7 @@ Boat::Boat(int x, int y) {
     dir = 0;
     mbx = -1;
     mby = -1;
-    stepCompensate = 0;
+    // stepCompensate = 0;
 }
 // bool Boat::navigation() {
 //     if (mbx == -1 || mby == -1) {
@@ -237,6 +237,7 @@ bool Boat::go_mb_point(int berth_id, int DeliveryPointId, int oriMbx, int oriMby
         info << "Boat " << id << " is already at the target" << endl;
         return false;
     }
+    auto start_time = time_start_debug();
     operation_list.clear();  // 清空当前路径
     mbx = oriMbx;
     mby = oriMby;
@@ -256,7 +257,7 @@ bool Boat::go_mb_point(int berth_id, int DeliveryPointId, int oriMbx, int oriMby
 
             mbx = now.x;
             mby = now.y;
-            stepCompensate = 0;
+            // stepCompensate = 0;
 
             if (choice == 0) {  // 如果选择的是泊位，最后一个指令是靠泊指令
                 operation_list.push_back(BERTH_OP);
@@ -282,6 +283,8 @@ bool Boat::go_mb_point(int berth_id, int DeliveryPointId, int oriMbx, int oriMby
                 berth[berth_id]->set_locked(true);
             }
             else if(choice == 1) info << id << "号船要去" << DeliveryPointId << "号交货点" << endl;
+
+            info << id << "号船寻路花费了 " << time_end_debug(start_time) << " 毫秒" << endl;
             return true;
         }
 
@@ -326,9 +329,10 @@ bool Boat::go_mb_point(int berth_id, int DeliveryPointId, int oriMbx, int oriMby
             q.push({nx, ny, now.dir,  gCost, hCost});
             boat_node_path[nx][ny][now.dir] = now;
         }
-
     }
-    return true;
+
+    info << id << "号船寻路花费了 " << time_end_debug(start_time) << " 毫秒（且没有找到路径）" << endl;
+    return false;
 }
 
 

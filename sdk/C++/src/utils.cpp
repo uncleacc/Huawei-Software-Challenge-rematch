@@ -20,6 +20,16 @@ string get_operation_debug(int op) {
     return "错误的操作";
 }
 
+time_point time_start_debug() {
+    return std::chrono::steady_clock::now();
+}
+
+int time_end_debug(time_point start) {
+    time_point end = std::chrono::steady_clock::now();
+    milliseconds duration = std::chrono::duration_cast<milliseconds>(end - start);
+    return static_cast<int>(duration.count());
+}
+
 /*
  * 检测(x, y)处是否有其他船只
  */

@@ -2,12 +2,19 @@
 #define UTILS_H
 #include <vector>
 #include <string>
+#include <chrono>
 
 /**************** debug用的函数 **********/
 
 std::string get_operation_debug(int op);
 bool other_boat_is_here_debug(int x, int y, int dir);
 std::string getCurrentTime();
+
+typedef std::chrono::steady_clock::time_point time_point;
+typedef std::chrono::milliseconds milliseconds;
+
+time_point time_start_debug();
+int time_end_debug(time_point start);
 
 /**************** end **********/
 

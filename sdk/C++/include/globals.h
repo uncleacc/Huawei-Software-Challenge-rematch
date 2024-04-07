@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <bitset>
 
+
 #include "robot.h"
 #include "boat.h"
 #include "berth.h"
@@ -42,6 +43,8 @@
 #define BERTH_OP 4  // 尝试将对应船位置重置到船坞上，会导致船进入恢复状态。
 
 using namespace std;
+
+
 
 const int n = 200;
 const int N = 210;
