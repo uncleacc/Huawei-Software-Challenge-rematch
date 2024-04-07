@@ -11,6 +11,35 @@ std::string getCurrentTime() {
     return buffer;
 }
 
+string get_operation_debug(int op) {
+    if(op == FORWARD_OP) return "前进";
+    else if(op == CLOCKWISE_DIR_OP) return "顺时针旋转";
+    else if(op == ANTICLOCKWISE_DIR_OP) return "逆时针旋转";
+    else if(op == DEPT_OP) return "离开泊位";
+    else if(op == BERTH_OP) return "靠泊";
+    return "错误的操作";
+}
+
+/*
+ * 检测(x, y)处是否有其他船只
+ */
+bool other_boat_is_here_debug(int x, int y, int dir) {
+    std::map<pair<int, int>, bool> vis;
+    std::vector<std::pair<int, int>> pos_list = get_boat_loc(x, y, dir);
+    for(int i = 0; i < pos_list.size(); i++) {
+        vis[pos_list[i]] = true;
+    }
+    for(int i = 0; i < boat_num; i++) {
+        if(boat[i]->x != x && boat[i]->y != y) {
+            std::vector<std::pair<int, int>> other_pos_list = get_boat_loc(boat[i]->x, boat[i]->y, boat[i]->dir);
+            for(int j = 0; j < other_pos_list.size(); j++) {
+                if(vis.find(other_pos_list[j]) != vis.end()) return true;
+            }
+        }
+    }
+    return false;
+}
+
 // 检测是否越界
 bool check(int x, int y) {
     return x >= 0 && x < n && y >= 0 && y < n;
@@ -75,6 +104,18 @@ bool check_robot_can_loc(int x, int y) {
     return false;
 }
 
+std::vector<std::pair<int, int>> get_boat_loc(int x, int y, int dir) {
+    std::vector<pair<int, int>> points;
+    points.push_back({x, y});
+    points.push_back({x + d[dir].x, y + d[dir].y});
+    points.push_back({x + 2 * d[dir].x, y + 2 * d[dir].y});
+    int nx = x + d[get_clockwise(dir)].x, ny = y + d[get_clockwise(dir)].y;
+    points.push_back({nx, ny});
+    points.push_back({nx + d[dir].x, ny + d[dir].y});
+    points.push_back({nx + 2 * d[dir].x, ny + 2 * d[dir].y});
+    return points;
+}
+
 bool check_boat_can_loc(int x, int y, int ts) {
     if(!check(x, y)) return false;
     if(exist_obstacle[x][y].test(ts) == 1) {
@@ -93,21 +134,21 @@ bool check_boat_can_loc(int x, int y, int ts) {
     return false;
 }
 
+/*
+ * 在ts时刻(x, y, dir)方向的船是否可以放置
+ */
 bool can_place_boat(int x, int y, int idx, int ts) {
-    std::vector<pair<int, int>> points;
-    points.push_back({x, y});
-    points.push_back({x + d[idx].x, y + d[idx].y});
-    points.push_back({x + 2 * d[idx].x, y + 2 * d[idx].y});
-    int nx = x + d[get_clockwise(idx)].x, ny = y + d[get_clockwise(idx)].y;
-    points.push_back({nx, ny});
-    points.push_back({nx + d[idx].x, ny + d[idx].y});
-    points.push_back({nx + 2 * d[idx].x, ny + 2 * d[idx].y});
+    if(ts > 15000) return false;
+    std::vector<pair<int, int>> points = get_boat_loc(x, y, idx);
     for(int i = 0; i < points.size(); i++) {
         if(!check_boat_can_loc(points[i].first, points[i].second, ts)) return false;
     }
     return true;
 }
 
+/*
+ * 顺时针旋转后的方向
+ */
 int get_clockwise(int dir) {
     if(dir == RIGHT) return DOWN;
     if(dir == LEFT) return UP;
@@ -116,6 +157,9 @@ int get_clockwise(int dir) {
     return -1;
 }
 
+/*
+ * 逆时针旋转后的方向
+ */
 int get_anticlockwise(int dir) {
     if(dir == RIGHT) return UP;
     if(dir == LEFT) return DOWN;
@@ -124,6 +168,9 @@ int get_anticlockwise(int dir) {
     return -1;
 }
 
+/*
+ * 逆置方向
+ */
 int get_opposite(int dir) {
     if(dir == RIGHT) return LEFT;
     if(dir == LEFT) return RIGHT;
@@ -147,23 +194,25 @@ std::pair<int, int> get_rotated_point(int x, int y, int dir_index, int rotate_di
     return res;
 }
 
+/*
+ * 获取操作
+ */
 int get_operation(int pdir, int cdir) {
-    if(pdir == cdir) return FORWARD_OP;
-    if(get_clockwise(pdir) == cdir) return CLOCKWISE_DIR_OP;
-    if(get_anticlockwise(pdir) == cdir) return ANTICLOCKWISE_DIR_OP;
+    if(pdir == cdir)
+        return FORWARD_OP;
+    if(get_clockwise(pdir) == cdir)
+        return CLOCKWISE_DIR_OP;
+    if(get_anticlockwise(pdir) == cdir)
+        return ANTICLOCKWISE_DIR_OP;
     error << "前面的状态转移不到后面的状态" << endl;
     return -1;
 }
 
+/*
+ * 检测(x, y)处是否有slow点
+ */
 bool check_boat_loc_slow(int x, int y, int idx) {
-    std::vector<pair<int, int>> points;
-    points.push_back({x, y});
-    points.push_back({x + d[idx].x, y + d[idx].y});
-    points.push_back({x + 2 * d[idx].x, y + 2 * d[idx].y});
-    int nx = x + d[get_clockwise(idx)].x, ny = y + d[get_clockwise(idx)].y;
-    points.push_back({nx, ny});
-    points.push_back({nx + d[idx].x, ny + d[idx].y});
-    points.push_back({nx + 2 * d[idx].x, ny + 2 * d[idx].y});
+    std::vector<pair<int, int>> points = get_boat_loc(x, y, idx);
     bool res = false;
     for(int i = 0; i < points.size(); i++) {
         if(check(points[i].first, points[i].second) == false) return false;
@@ -173,14 +222,7 @@ bool check_boat_loc_slow(int x, int y, int idx) {
 }
 
 void set_obstacle(int x, int y, int dir, int ts) {
-    std::vector<pair<int, int>> points;
-    points.push_back({x, y});
-    points.push_back({x + d[dir].x, y + d[dir].y});
-    points.push_back({x + 2 * d[dir].x, y + 2 * d[dir].y});
-    int nx = x + d[get_clockwise(dir)].x, ny = y + d[get_clockwise(dir)].y;
-    points.push_back({nx, ny});
-    points.push_back({nx + d[dir].x, ny + d[dir].y});
-    points.push_back({nx + 2 * d[dir].x, ny + 2 * d[dir].y});
+    std::vector<pair<int, int>> points = get_boat_loc(x, y, dir);
     for(int i = 0; i < points.size(); i++) {
         // info << "set_obstacle: " << points[i].first << " " << points[i].second << " " << ts << endl;
         exist_obstacle[points[i].first][points[i].second].set(ts);
@@ -212,3 +254,10 @@ bool locate_berth_area(int x, int y, int berth_id) {
     }
     return false;
 }
+
+/*
+void step_compensate_compute(int time) {
+    for(int i = 0; i < boat_num; i++) {
+        boat[i]->stepCompensate = time;
+    }
+}*/

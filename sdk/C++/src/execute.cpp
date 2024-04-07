@@ -297,7 +297,6 @@ void execute::execute_buy() {
         buy->buy_boat(0);
     }
     if (isNeedBuyRobot != -1) {
-        info << isNeedBuyBoat <<" " << isNeedBuyRobot << endl;
         buy->buy_robot(isNeedBuyRobot);
     }
 /*test    if(step == 1) {

@@ -10,6 +10,7 @@ Boat::Boat() {
     dir = 0;
     mbx = -1;
     mby = -1;
+    stepCompensate = 0;
 }
 
 Boat::Boat(int x, int y) {
@@ -19,6 +20,7 @@ Boat::Boat(int x, int y) {
     dir = 0;
     mbx = -1;
     mby = -1;
+    stepCompensate = 0;
 }
 // bool Boat::navigation() {
 //     if (mbx == -1 || mby == -1) {
@@ -248,20 +250,31 @@ bool Boat::go_mb_point(int berth_id, int DeliveryPointId, int oriMbx, int oriMby
     while (!q.empty()) {
         boat_sport_node now = q.top();
         q.pop();
+
         if ((now.x == mbx && now.y == mby)
             || (choice == 0 && locate_berth_area(now.x, now.y, berth_id))) {
 
             mbx = now.x;
             mby = now.y;
+            stepCompensate = 0;
+
             if (choice == 0) {  // 如果选择的是泊位，最后一个指令是靠泊指令
                 operation_list.push_back(BERTH_OP);
             }
             while (boat_node_path[now.x][now.y][now.dir].x != -1) {
                 operation_list.push_back(get_operation(boat_node_path[now.x][now.y][now.dir].dir, now.dir));
+                int cur_ts = now.gCost;
                 set_obstacle(now.x, now.y, now.dir, step + now.gCost);
                 now = boat_node_path[now.x][now.y][now.dir];
+                int pre_ts = now.gCost;
+                if(pre_ts + 2 == cur_ts) // 经过了减速区
+                    set_obstacle(now.x, now.y, now.dir, step + now.gCost + 1);
             }
             reverse(operation_list.begin(), operation_list.end());
+            info << id << "号船找到了目标，操作序列如下" << endl;
+            for (int i = 0; i < operation_list.size(); i++) {
+                info << step + i << ": " << get_operation_debug(operation_list[i]) << endl;
+            }
             if(choice == 0) {
                 info << id << "号船要去" << berth_id << "号泊位" << endl;
                 close_berth(berth_id);   //其他的船不可以去berth_id
@@ -272,6 +285,9 @@ bool Boat::go_mb_point(int berth_id, int DeliveryPointId, int oriMbx, int oriMby
             return true;
         }
 
+        if(check_boat_loc_slow(x, y, now.dir)) { //从缓慢区出去的时候会停滞一帧
+            now.gCost ++;
+        }
 
         int nx, ny, rt_dir, gCost, hCost;
         std::pair<int, int> rotated_xy;
@@ -280,10 +296,8 @@ bool Boat::go_mb_point(int berth_id, int DeliveryPointId, int oriMbx, int oriMby
         rotated_xy = get_rotated_point(now.x, now.y, now.dir, CLOCKWISE_DIR_OP);
         rt_dir = get_clockwise(now.dir);
         nx = rotated_xy.first; ny = rotated_xy.second;
-
-        if(check_boat_loc_slow(nx, ny, rt_dir)) gCost = now.gCost + 2;
-        else gCost = now.gCost + 1;
-        if (can_place_boat(nx, ny, rt_dir, gCost + step) && !boat_vis[nx][ny][rt_dir]) {
+        gCost = now.gCost + 1;
+        if (can_place_boat(nx, ny, rt_dir, step + gCost) && !boat_vis[nx][ny][rt_dir]) {
             boat_vis[nx][ny][rt_dir] = true;
             hCost = abs(nx - mbx) + abs(ny - mby);
             q.push({nx, ny, rt_dir,  gCost, hCost});
@@ -294,9 +308,7 @@ bool Boat::go_mb_point(int berth_id, int DeliveryPointId, int oriMbx, int oriMby
         rotated_xy = get_rotated_point(now.x, now.y, now.dir, ANTICLOCKWISE_DIR_OP);
         rt_dir = get_anticlockwise(now.dir);
         nx = rotated_xy.first; ny = rotated_xy.second;
-
-        if(check_boat_loc_slow(nx, ny, rt_dir)) gCost = now.gCost + 2;
-        else gCost = now.gCost + 1;
+        gCost = now.gCost + 1;
         if (can_place_boat(nx, ny, rt_dir, gCost + step) && !boat_vis[nx][ny][rt_dir]) {
             boat_vis[nx][ny][rt_dir] = true;
             hCost = abs(nx - mbx) + abs(ny - mby);
@@ -307,8 +319,7 @@ bool Boat::go_mb_point(int berth_id, int DeliveryPointId, int oriMbx, int oriMby
         //前进
         nx = now.x + d[now.dir].x;
         ny = now.y + d[now.dir].y;
-        if(check_boat_loc_slow(nx, ny, now.dir)) gCost = now.gCost + 2;
-        else gCost = now.gCost + 1;
+        gCost = now.gCost + 1;
         if (can_place_boat(nx, ny, now.dir, gCost + step) && !boat_vis[nx][ny][now.dir]) {
             boat_vis[nx][ny][now.dir] = true;
             hCost = abs(nx - mbx) + abs(ny - mby);
@@ -354,7 +365,6 @@ void Boat::exec(int op) {
         x = rotated_xy.first;
         y = rotated_xy.second;
         info <<  "Boat " << id << " rot" << " x:" <<  x  << " y:" << y << "  dir:" << dir << " mbx:" <<  mbx  << " mby:" << mby << endl;
-
     }
     else if(op == CLOCKWISE_DIR_OP) {
         printf("rot %d 0\n", id);
@@ -377,6 +387,9 @@ void Boat::exec(int op) {
         mbx = -1;
         mby = -1;
         info <<  "Boat " << id << " berth" << " x:" <<  x  << " y:" << y << "  dir:" << dir << " mbx:" <<  mbx  << " mby:" << mby << endl;
+    }
+    if(other_boat_is_here_debug(x, y, dir)) {
+        error << "Boat " << id << " 发生撞击" << endl;
     }
 }
 

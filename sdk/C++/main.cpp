@@ -207,13 +207,12 @@ int main() {
 
     int preStep = 0;
     while (scanf("%d", &step) != EOF) {
-        info << step << " " << preStep << endl;
+        info << endl << "step: " << step << " begin" << endl;
+
         if(step - preStep > 1) {
             error << "跳帧: " << step - preStep << endl;
         }
         preStep = step;
-
-        info << endl << "step: " << step << " begin" << endl;
 
         // 输入
         Input();

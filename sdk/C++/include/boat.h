@@ -28,6 +28,7 @@ public:
     int x, y;
     int dir;                // 正方方向 (0-右, 1-左, 2-上, 3-下)
     int mbx, mby;
+    // int stepCompensate;     //跳帧补偿
 
     std::vector<int> berthBoard;
     std::vector<int> operation_list;  // 0: 前进，1: 左转，2: 右转

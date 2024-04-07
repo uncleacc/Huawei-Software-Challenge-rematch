@@ -3,41 +3,107 @@
 #include <vector>
 #include <string>
 
+/**************** debug用的函数 **********/
+
+std::string get_operation_debug(int op);
+bool other_boat_is_here_debug(int x, int y, int dir);
 std::string getCurrentTime();
 
+/**************** end **********/
+
+/*
+ * 在ts检测(x, y)处是否可以放船
+ */
+bool can_place_boat(int x, int y, int dir, int ts);
+
+/*
+ * 检测是否越界
+ */
 bool check(int x, int y);
 
-int get_nearest_berth_length(int x, int y, const std::vector<int> &boards);
-
-int getBerthIdByPoint(int x, int y, const std::vector<int> &boards);
-
-void closeAllRobot(int pos);
-
+/*
+ * 检测机器人是否可以在(x, y)处
+ */
 bool check_robot_can_loc(int x, int y);
 
+/*
+ * 在ts检测(x, y)处是否存在障碍（包括船只和机器人）
+ */
 bool check_boat_can_loc(int x, int y, int ts);
 
-bool can_place_boat(int x, int y, int dir_index, int ts);
-
-int get_clockwise(int dir);
-
-int get_anticlockwise(int dir);
-
-int get_opposite(int dir);
-
-std::pair<int, int> get_rotated_point(int x, int y, int dir_index, int rotate_dir);
-
-int get_operation(int pdir, int cdir);
-
+/*
+ * 检测(x, y)处是否有slow点
+ */
 bool check_boat_loc_slow(int x, int y, int idx);
 
-void set_obstacle(int x, int y, int dir, int ts);
+/*
+ * 所有机器人不能去pos港口
+ */
+void closeAllRobot(int pos);
 
-void open_berth(int berth_id);
-
+/*
+ * 关闭berth_id
+ */
 void close_berth(int berth_id);
 
+/*
+ * 得到(x, y)最近的港口长度
+ */
+int get_nearest_berth_length(int x, int y, const std::vector<int> &boards);
+
+/*
+ * 通过坐标获取boards中的泊位id
+ */
+int getBerthIdByPoint(int x, int y, const std::vector<int> &boards);
+
+/*
+ * 获取(x, y, dir)船只的位置
+ */
+std::vector<std::pair<int, int>> get_boat_loc(int x, int y, int dir);
+
+/*
+ * 获取dir方向的顺时针方向
+ */
+int get_clockwise(int dir);
+
+/*
+ * 获取dir方向的逆时针方向
+ */
+int get_anticlockwise(int dir);
+
+/*
+ * 获取dir方向的相反方向
+ */
+int get_opposite(int dir);
+
+/*
+ * 获取dir方向的旋转后的点
+ */
+std::pair<int, int> get_rotated_point(int x, int y, int dir_index, int rotate_dir);
+
+/*
+ * 从pdir到cdir如何操作
+ */
+int get_operation(int pdir, int cdir);
+
+/*
+ * 检测(x, y)处是否有障碍
+ */
 bool locate_berth_area(int x, int y, int id);
 
+/*
+ * 打开berth_id
+ */
+void open_berth(int berth_id);
+
+/*
+ * 将(x,y,dir)在ts时刻设置为障碍
+ */
+void set_obstacle(int x, int y, int dir, int ts);
+
+/*
+ * 帧率补偿计算
+ *//*
+void step_compensate_compute(int time);*/
 
 #endif
