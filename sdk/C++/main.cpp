@@ -5,8 +5,8 @@ using namespace std;
 /**
  * 判题器交互输入的全局变量
  */
-int money, boat_capacity, step;  // 当前金钱数、船的容量、当前实际运行帧数(系统读入，会进行覆盖)
-int berth_num, robot_num, boat_num;  // 码头数、机器人数、船数(系统读入，会进行覆盖)
+int money, boat_capacity, step, zhen;  // 当前金钱数、船的容量、当前实际运行帧数(系统读入，会进行覆盖)
+int berth_num, robot_num, boat_num, total_value;  // 码头数、机器人数、船数(系统读入，会进行覆盖)
 
 /*
  * 地图货物信息，机器人专用定义区
@@ -22,12 +22,20 @@ long long all_goods_val;
 vector<pair<int, int>> delivery_point;   // 轮船的货物交货点
 std::map<std::pair<int, int>, bool> slow_points;  // 轮船的慢速行驶点
 bitset<15001> exist_obstacle[N][N]; // 避撞的障碍物信息
+// char exist_id[N][N][15001];  // 地图在ts时刻的船只信息
+
+/*int to_deliver_hCost[11][N][N];
+int to_berth_hCost[15][N][N];*/
+
+int to_deliver_hCost[11][N][N][5];
+int to_berth_hCost[15][N][N][5];
 
 
 /**
  * 轮船进行A*算法的全局变量，定义在此为了避免栈内存空间不够用
  */
 bool boat_vis[n][n][5];
+int boat_dis[n][n][5];
 boat_sport_node boat_node_path[n][n][4];
 
 vector<pair<int, int>> robot_purchase_point;
@@ -166,6 +174,7 @@ void Input() {
         scanf("%d%d%d", &x, &y, &val);
         gds[x][y] = val;
         all_goods_val += val;
+        total_value += val;
         goods_vanish_time[x][y] = step + 1000;
     }
     scanf("%d", &robot_num);
@@ -205,8 +214,11 @@ void thread_1() {
 int main() {
     Init();
 
+    pre_process();
+
     int preStep = 0;
-    while (scanf("%d", &step) != EOF) {
+    for(step = 1; step <= 15000; step++) {
+        scanf("%d", &step);
         info << endl << "step: " << step << " begin" << endl;
 
         if(step - preStep > 1) {
@@ -219,6 +231,7 @@ int main() {
 
         // 更新
         update(step);
+
 
         // 执行机器人指令
         info << "execute robot begin" << endl;
@@ -242,8 +255,21 @@ int main() {
         fflush(stdout);
     }
 
+    /*int total_price = 0;
     for (int i = 0; i < berth_num; i++) {
         info << "berth[" << i << "]  point:(" << berth[i]->x << " " << berth[i]->y << ") num:" << berth[i]->num << " price:" << berth[i]->price << endl;
+        total_price += berth[i]->price;
     }
+    info << "total_price:" << total_price << endl;*/
+
+    int totalBerthPrice = 0;
+    for (int i = 0; i < berth_num; i++) {
+        info << "berth[" << i << "]  point:(" << berth[i]->x << " " << berth[i]->y << ") num:" << berth[i]->num << " price:" << berth[i]->price << endl;
+        totalBerthPrice += berth[i]->price;
+    }
+    info << "total_goods_value:" << total_value << endl;
+    info << "total_Berth_value:" << totalBerthPrice << endl;
+    info << "money:" << money << endl;
+    info << "totalMoneyProfit:" << money + boat_num * 8000 + robot_num * 2000 - 25000 << endl;
     return 0;
 }

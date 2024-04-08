@@ -12,12 +12,12 @@ public:
     int mbx, mby; //目标点坐标
     int id;  // 机器人的id
     bool haveTarget; // 是否选定食物
-    bool lockTarget; // 是否锁定食物
     int searchGdsNumber; // 搜索的数量
     int findLength; // 锁定的货物距离
+    bool is_first_move; // 是否是第一次移动
 
 
-//    deque<int> movePath;
+    std::vector<int> movePath;
     vector<int> boards; // 机器人可以去的泊位
 
 public:
