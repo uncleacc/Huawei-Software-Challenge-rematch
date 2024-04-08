@@ -1,3 +1,4 @@
+.idea
 replay/
 sdk/C++/.idea/
 sdk/C++/.vs/
@@ -5,4 +6,4 @@ sdk/C++/build/
 sdk/C++/cmake-build-debug/
 sdk/C++/out/
 doc
-.idea
+log
