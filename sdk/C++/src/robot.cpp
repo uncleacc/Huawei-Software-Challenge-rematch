@@ -92,6 +92,8 @@ void Robot::put_good(int ts) {
     berth[berth_id]->history_cnt ++;
     berth[berth_id]->price += price;
     printf("pull %d\n", id);
+
+    berth[berth_id]->berthGoodsPrice.push_back(price);
 }
 
 // 移动指令

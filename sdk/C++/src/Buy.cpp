@@ -36,11 +36,13 @@ bool Buy::buy_boat(int idx) {
     boat[boat_num - 1] = new Boat(x, y);
     // TODO 给船赋予可去的区间
     if (idx == 0) {
+        info << "step" << step << " Buy Boat" << idx << " in " << idx;
         for(int i = 0; i < berth_num; i++) {
             if(berth[i]->is_locked == false)
                 boat[boat_num - 1]->add_berth(i);
         }
     } else {
+        info << "step" << step << " Buy Boat··" << idx << " in " << idx;
         boat[boat_num - 1]->berthBoard.push_back(0);
         boat[boat_num - 1]->berthBoard.push_back(1);
         // boat[boat_num - 1]->berthBoard.push_back(2);

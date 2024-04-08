@@ -26,7 +26,8 @@ time_point time_start_debug() {
 
 int time_end_debug(time_point start) {
     time_point end = std::chrono::steady_clock::now();
-    milliseconds duration = std::chrono::duration_cast<milliseconds>(end - start);
+    // milliseconds duration = std::chrono::duration_cast<milliseconds>(end - start);
+    microseconds duration = std::chrono::duration_cast<microseconds>(end - start);
     return static_cast<int>(duration.count());
 }
 

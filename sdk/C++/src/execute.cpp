@@ -56,6 +56,10 @@ void execute::execute_robot() {
 
 void execute::execute_boat() {
     for (int i = 0; i < boat_num; ++i) {
+        int delivery_id = i == 0 ? delivery_point.size() -1 : 0;  // map2
+        if (boat[i]->x == delivery_point[delivery_id].first && boat[i]->y == delivery_point[delivery_id].second) {
+            boat[i]->goodsPrice = 0;
+        }
         if (boat[i]->mbx == -1 && boat[i]->mby == -1) {
              // info  << "Boat " << boat[i]->id << " no mb point" << endl;
             if (boat[i]->status == 0){
@@ -63,16 +67,23 @@ void execute::execute_boat() {
                 //  TODO 方案1：如果船没有装满,船去泊位列表的下一个泊位装载货物
                 //  TODO 方案2：如果船没有装满，船去所有泊位中货物最多的泊位装载货物，并给予泊位的货物数量-船容量，其他船寻找货物最多泊位时可以不优先选他
                 //  TODO 方案3：如果船没有装满，船去泊位列表中货物最多的泊位装载货物，主要起到一个分区的左右，节省船移动时间。
-                if (boat[i]->goods_num <= boat_capacity - 2) {   // TODO 后续需要封装成去泊位的函数
-                    int maxBerthId = boat[i]->find_max_goods();
-                    info << "Boat " << boat[i]->id << " find maxBerthId " << maxBerthId << endl;
-                    if(maxBerthId != -1) boat[i]->go_mb_point(maxBerthId, -1, berth[maxBerthId]->x, berth[maxBerthId]->y,0);
-                    else error << "船" << boat[i]->id << "没有找到目标泊位" << endl;
-                } else if (boat[i]->goods_num > boat_capacity - 2) {  // TODO 后续需要封装成去交货点的函数
+                bool isGoBerth = robot_num < robot_max_num && boat[i]->goodsPrice + money >= 2000 && step > robot_max_num;
+                if (boat[i]->goods_num > boat_capacity - 2 || isGoBerth) {  // TODO 后续需要封装成去交货点的函数
                     // int delivery_id = i == 0 ? 0 : delivery_point.size() -1;  // map1
                     int delivery_id = i == 0 ? delivery_point.size() -1 : 0;  // map2
 
                     boat[i]->go_mb_point(-1,delivery_id, delivery_point[delivery_id].first, delivery_point[delivery_id].second, 1);
+                }else  if (boat[i]->goods_num <= boat_capacity - 2 ) {   // TODO 后续需要封装成去泊位的函数
+
+                    // TODO
+                    // int maxBerthId = boat[i]->find_max_goods();
+
+                    int maxBerthId = boat[i]->mbBerthId == -1 ? boat[i]->find_max_goods() : boat[i]->mbBerthId;
+                    boat[i]->mbBerthId = maxBerthId;
+
+                    info << "Boat " << boat[i]->id << " find maxBerthId " << maxBerthId << endl;
+                    if(maxBerthId != -1) boat[i]->go_mb_point(maxBerthId, -1, berth[maxBerthId]->x, berth[maxBerthId]->y,0);
+                    else error << "船" << boat[i]->id << "没有找到目标泊位" << endl;
                 }
             }
             else if (boat[i]->status == 2) {
@@ -88,9 +99,15 @@ void execute::execute_boat() {
                     boat[i]->operation_list.push_back(DEPT_OP);
                 } else {
                     // 先执行船舶命令，再进行装载!!!!!!!,一旦发送回到主航道的指令后续无法装载
-                    int load_num = std::min(berth[currentBerthId]->num, std::min(berth[currentBerthId]->loading_speed, boat_capacity - boat[i]->goods_num));
+                    int load_num = std::min(berth[currentBerthId]->num, std::min(berth[currentBerthId]->loading_speed,
+                                                                                 boat_capacity - boat[i]->goods_num));
                     boat[i]->goods_num += load_num;
                     berth[currentBerthId]->num -= load_num;
+
+                    for (int load_num_i = 0; load_num_i < load_num; load_num_i++) {
+                        boat[i]->goodsPrice += berth[currentBerthId]->berthGoodsPrice[0];
+                        berth[currentBerthId]->berthGoodsPrice.erase(berth[currentBerthId]->berthGoodsPrice.begin());
+                    }
                 }
             }
             else if (boat[i]->status == 1) {

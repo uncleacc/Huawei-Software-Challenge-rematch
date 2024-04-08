@@ -21,6 +21,9 @@ public:
 
     int klux, kluy, krdx, krdy;   // 靠泊区左上角和右下角坐标
     bool is_locked;        //有船要来
+
+    std::vector<int> berthGoodsPrice;
+
 };
 
 #endif

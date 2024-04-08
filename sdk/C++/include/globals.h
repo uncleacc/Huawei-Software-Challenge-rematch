@@ -51,8 +51,8 @@ const int N = 210;
 const int M = 100;
 const int boat_price = 8000, robot_price = 2000;
 
-const int robot_max_num = 15;
-const int boat_max_num = 5;
+const int robot_max_num = 18;
+const int boat_max_num = 2;
 
 
 extern int robot_num, boat_num, berth_num;
@@ -84,7 +84,11 @@ struct boat_sport_node{
     int gCost;  // 起始点到当前点的实际代价
     int hCost;  // 从当前点到目标点的预估代价----曼哈顿距离
     bool operator<(const boat_sport_node &b) const {
-        return gCost + hCost > b.gCost + b.hCost;
+        return gCost  > b.gCost ;
+        // return hCost >  b.hCost;
+        // return gCost + hCost > b.gCost + b.hCost;
+
+        // return gCost + hCost > b.gCost + b.hCost;
     }
 };
 

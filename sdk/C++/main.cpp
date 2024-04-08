@@ -152,7 +152,7 @@ void Init() {
     printf("OK\n");
     fflush(stdout);
 }
-
+int total_value = 0;
 /**
  * 每一帧执行的输入
  */
@@ -167,6 +167,7 @@ void Input() {
         gds[x][y] = val;
         all_goods_val += val;
         goods_vanish_time[x][y] = step + 1000;
+        total_value += val;
     }
     scanf("%d", &robot_num);
     for (int i = 0; i < robot_num; i++) {
@@ -241,9 +242,14 @@ int main() {
         puts("OK");
         fflush(stdout);
     }
-
+    int totalBerthPrice = 0;
     for (int i = 0; i < berth_num; i++) {
         info << "berth[" << i << "]  point:(" << berth[i]->x << " " << berth[i]->y << ") num:" << berth[i]->num << " price:" << berth[i]->price << endl;
+        totalBerthPrice += berth[i]->price;
     }
+    info << "total_goods_value:" << total_value << endl;
+    info << "total_Berth_value:" << totalBerthPrice << endl;
+    info << "money:" << money << endl;
+    info << "totalMoneyProfit:" << money + boat_num * 8000 + robot_num * 2000 - 25000 << endl;
     return 0;
 }

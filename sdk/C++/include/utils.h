@@ -12,6 +12,7 @@ std::string getCurrentTime();
 
 typedef std::chrono::steady_clock::time_point time_point;
 typedef std::chrono::milliseconds milliseconds;
+typedef std::chrono::microseconds microseconds;
 
 time_point time_start_debug();
 int time_end_debug(time_point start);
