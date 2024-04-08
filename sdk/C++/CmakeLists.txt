@@ -23,11 +23,11 @@ add_executable(${EXECUTABLE_NAME}
         ${SOURCE_DIR}/boat.cpp
         ${SOURCE_DIR}/robot.cpp
         ${SOURCE_DIR}/utils.cpp
-        ${SOURCE_DIR}/Debug.cpp
         ${SOURCE_DIR}/Buy.cpp
         ${SOURCE_DIR}/execute.cpp
         Coordinate.cpp
         Coordinate.h
+        include/Debug.h
 )
 
 # 设置编译输出路径

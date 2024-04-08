@@ -2,6 +2,54 @@
 #include "globals.h"
 #include <queue>
 
+// 获取当前时间
+std::string getCurrentTime() {
+    time_t now = time(0);
+    tm* localTime = localtime(&now);
+    char buffer[80];
+    strftime(buffer, 80, "%m-%d.%H.%M.%S", localTime);
+    return buffer;
+}
+
+string get_operation_debug(int op) {
+    if(op == FORWARD_OP) return "前进";
+    else if(op == CLOCKWISE_DIR_OP) return "顺时针旋转";
+    else if(op == ANTICLOCKWISE_DIR_OP) return "逆时针旋转";
+    else if(op == DEPT_OP) return "离开泊位";
+    else if(op == BERTH_OP) return "靠泊";
+    return "错误的操作";
+}
+
+time_point time_start_debug() {
+    return std::chrono::steady_clock::now();
+}
+
+int time_end_debug(time_point start) {
+    time_point end = std::chrono::steady_clock::now();
+    milliseconds duration = std::chrono::duration_cast<milliseconds>(end - start);
+    return static_cast<int>(duration.count());
+}
+
+/*
+ * 检测(x, y)处是否有其他船只
+ */
+bool other_boat_is_here_debug(int x, int y, int dir) {
+    std::map<pair<int, int>, bool> vis;
+    std::vector<std::pair<int, int>> pos_list = get_boat_loc(x, y, dir);
+    for(int i = 0; i < pos_list.size(); i++) {
+        vis[pos_list[i]] = true;
+    }
+    for(int i = 0; i < boat_num; i++) {
+        if(boat[i]->x != x && boat[i]->y != y) {
+            std::vector<std::pair<int, int>> other_pos_list = get_boat_loc(boat[i]->x, boat[i]->y, boat[i]->dir);
+            for(int j = 0; j < other_pos_list.size(); j++) {
+                if(vis.find(other_pos_list[j]) != vis.end()) return true;
+            }
+        }
+    }
+    return false;
+}
+
 // 检测是否越界
 bool check(int x, int y) {
     return x >= 0 && x < n && y >= 0 && y < n;
@@ -66,8 +114,23 @@ bool check_robot_can_loc(int x, int y) {
     return false;
 }
 
-bool check_boat_can_loc(int x, int y) {
+std::vector<std::pair<int, int>> get_boat_loc(int x, int y, int dir) {
+    std::vector<pair<int, int>> points;
+    points.push_back({x, y});
+    points.push_back({x + d[dir].x, y + d[dir].y});
+    points.push_back({x + 2 * d[dir].x, y + 2 * d[dir].y});
+    int nx = x + d[get_clockwise(dir)].x, ny = y + d[get_clockwise(dir)].y;
+    points.push_back({nx, ny});
+    points.push_back({nx + d[dir].x, ny + d[dir].y});
+    points.push_back({nx + 2 * d[dir].x, ny + 2 * d[dir].y});
+    return points;
+}
+
+bool check_boat_can_loc(int x, int y, int ts) {
     if(!check(x, y)) return false;
+    if(exist_obstacle[x][y].test(ts) == 1) {
+        return false;
+    }
     if( grid[x][y] == '*'
         || grid[x][y] == '~'
         || grid[x][y] == 'C'
@@ -81,21 +144,21 @@ bool check_boat_can_loc(int x, int y) {
     return false;
 }
 
-bool can_place_boat(int x, int y, int idx) {
-    std::vector<pair<int, int>> points;
-    points.push_back({x, y});
-    points.push_back({x + d[idx].x, y + d[idx].y});
-    points.push_back({x + 2 * d[idx].x, y + 2 * d[idx].y});
-    int nx = x + d[get_clockwise(idx)].x, ny = y + d[get_clockwise(idx)].y;
-    points.push_back({nx, ny});
-    points.push_back({nx + d[idx].x, ny + d[idx].y});
-    points.push_back({nx + 2 * d[idx].x, ny + 2 * d[idx].y});
+/*
+ * 在ts时刻(x, y, dir)方向的船是否可以放置
+ */
+bool can_place_boat(int x, int y, int idx, int ts) {
+    if(ts > 15000) return false;
+    std::vector<pair<int, int>> points = get_boat_loc(x, y, idx);
     for(int i = 0; i < points.size(); i++) {
-        if(!check_boat_can_loc(points[i].first, points[i].second)) return false;
+        if(!check_boat_can_loc(points[i].first, points[i].second, ts)) return false;
     }
     return true;
 }
 
+/*
+ * 顺时针旋转后的方向
+ */
 int get_clockwise(int dir) {
     if(dir == RIGHT) return DOWN;
     if(dir == LEFT) return UP;
@@ -104,6 +167,9 @@ int get_clockwise(int dir) {
     return -1;
 }
 
+/*
+ * 逆时针旋转后的方向
+ */
 int get_anticlockwise(int dir) {
     if(dir == RIGHT) return UP;
     if(dir == LEFT) return DOWN;
@@ -112,6 +178,9 @@ int get_anticlockwise(int dir) {
     return -1;
 }
 
+/*
+ * 逆置方向
+ */
 int get_opposite(int dir) {
     if(dir == RIGHT) return LEFT;
     if(dir == LEFT) return RIGHT;
@@ -130,30 +199,235 @@ std::pair<int, int> get_rotated_point(int x, int y, int dir_index, int rotate_di
         res = {x + d[dir_index].x + d[get_opposite(get_anticlockwise(dir_index))].x, y + d[dir_index].y + d[get_opposite(get_anticlockwise(dir_index))].y};
     }
     else {
-        outFile << "ERROR: 错误的旋转方向" << endl;
+        error << "错误的旋转方向" << endl;
     }
     return res;
 }
 
+/*
+ * 获取操作
+ */
 int get_operation(int pdir, int cdir) {
-    if(pdir == cdir) return FORWARD;
-    if(get_clockwise(pdir) == cdir) return CLOCKWISE_DIR;
-    if(get_anticlockwise(pdir) == cdir) return ANTICLOCKWISE_DIR;
-    outFile << "ERROR: 前面的状态转移不到后面的状态" << endl;
+    if(pdir == cdir)
+        return FORWARD_OP;
+    if(get_clockwise(pdir) == cdir)
+        return CLOCKWISE_DIR_OP;
+    if(get_anticlockwise(pdir) == cdir)
+        return ANTICLOCKWISE_DIR_OP;
+    error << "前面的状态转移不到后面的状态" << endl;
     return -1;
 }
 
+/*
+ * 检测(x, y)处是否有slow点
+ */
 bool check_boat_loc_slow(int x, int y, int idx) {
-    std::vector<pair<int, int>> points;
-    points.push_back({x, y});
-    points.push_back({x + d[idx].x, y + d[idx].y});
-    points.push_back({x + 2 * d[idx].x, y + 2 * d[idx].y});
-    int nx = x + d[get_clockwise(idx)].x, ny = y + d[get_clockwise(idx)].y;
-    points.push_back({nx, ny});
-    points.push_back({nx + d[idx].x, ny + d[idx].y});
-    points.push_back({nx + 2 * d[idx].x, ny + 2 * d[idx].y});
+    std::vector<pair<int, int>> points = get_boat_loc(x, y, idx);
+    bool res = false;
     for(int i = 0; i < points.size(); i++) {
-        if(slow_points.find({points[i].first, points[i].second}) != slow_points.end()) return true;
+        if(check(points[i].first, points[i].second) == false) return false;
+        if(slow_points.find({points[i].first, points[i].second}) != slow_points.end()) res = true;
+    }
+    return res;
+}
+
+void set_obstacle(int x, int y, int dir, int ts) {
+    std::vector<pair<int, int>> points = get_boat_loc(x, y, dir);
+    for(int i = 0; i < points.size(); i++) {
+        // info << "set_obstacle: " << points[i].first << " " << points[i].second << " " << ts << endl;
+        exist_obstacle[points[i].first][points[i].second].set(ts);
+    }
+}
+
+void open_berth(int berth_id) {
+    berth[berth_id]->set_locked(false);
+    for(int i = 0; i < boat_num; i++) {
+        boat[i]->add_berth(berth_id);
+    }
+}
+
+void close_berth(int berth_id) {
+    for(int i = 0; i < boat_num; i++) {
+        boat[i]->remove_berth(berth_id);
+    }
+}
+
+/**
+ * (x, y)是否是berth[berth_id]的靠泊区
+ */
+bool locate_berth_area(int x, int y, int berth_id) {
+    if (berth[berth_id]->klux <= x && berth[berth_id]->kluy <= y
+        && berth[berth_id]->krdx >= x  && berth[berth_id]->krdy>= y
+        ) {
+
+        return true;
     }
     return false;
 }
+
+void pre_process() {
+    memset(to_deliver_hCost, 0x3f, sizeof to_deliver_hCost);
+    memset(to_berth_hCost, 0x3f, sizeof to_berth_hCost);
+    for(int i = 0; i < delivery_point.size(); i++) {
+        sea_flood_algorithm(i, delivery_point[i].first, delivery_point[i].second);
+    }
+    for(int i = 0; i < berth_num; i++) {
+        berth_flood_algorithm(i, berth[i]->x, berth[i]->y);
+    }
+}
+
+void berth_flood_algorithm(int id, int sx, int sy) {
+    struct node {
+        int x, y, dir, dis;
+        bool operator<(const node &b) const {
+            return dis > b.dis;
+        }
+    };
+    priority_queue<node> q;
+    for(int i = 0; i < 4; i++) {
+        if(check_boat_can_loc(sx, sy, i)) {
+            q.push({sx, sy, i, 0});
+            to_berth_hCost[id][sx][sy][i] = 0;
+        }
+    }
+
+    while (!q.empty()) {
+        int x = q.top().x;
+        int y = q.top().y;
+        int dir = q.top().dir;
+        int dis = q.top().dis;
+        q.pop();
+
+        int nx, ny, ndir, ndis;
+
+        //前进
+        nx = x - d[dir].x;
+        ny = y - d[dir].y;
+        ndir = dir;
+        ndis = dis + 1;
+        if (check_boat_loc_slow(nx, ny, ndir)) ndis ++;
+        if (check_boat_can_loc(nx, ny, ndir) && ndis < to_berth_hCost[id][nx][ny][ndir]) {
+            to_berth_hCost[id][nx][ny][ndir] = ndis;
+            q.push({nx, ny, ndir, ndis});
+        }
+        //顺时针
+        nx = x - 2 * d[get_anticlockwise(dir)].x;
+        ny = y - 2 * d[get_anticlockwise(dir)].y;
+        ndis = dis + 1;
+        ndir = get_anticlockwise(dir);
+        if (check_boat_loc_slow(nx, ny, ndir)) ndis ++;
+        if (check_boat_can_loc(nx, ny, ndir) && ndis < to_berth_hCost[id][nx][ny][ndir]) {
+            to_berth_hCost[id][nx][ny][ndir] = ndis;
+            q.push({nx, ny, ndir, ndis});
+        }
+        //逆时针
+        nx = x + d[dir].x - d[get_clockwise(dir)].x;
+        ny = y + d[dir].y - d[get_clockwise(dir)].y;
+        ndis = dis + 1;
+        ndir = get_clockwise(dir);
+        if (check_boat_loc_slow(nx, ny, ndir)) ndis ++;
+        if (check_boat_can_loc(nx, ny, ndir) && ndis < to_berth_hCost[id][nx][ny][ndir]) {
+            to_berth_hCost[id][nx][ny][ndir] = ndis;
+            q.push({nx, ny, ndir, ndis});
+        }
+    }
+}
+
+/*void sea_flood_algorithm(int id, int sx, int sy) {
+    struct node {
+        int x, y, dis;
+        bool operator<(const node &b) const {
+            return dis > b.dis;
+        }
+    };
+    priority_queue<node> q;
+    q.push({sx, sy, 0});
+    to_deliver_hCost[id][sx][sy] = 0;
+    while (!q.empty()) {
+        int x = q.top().x;
+        int y = q.top().y;
+        int dis = q.top().dis;
+        q.pop();
+
+        for (int i = 0; i < 4; i++) {
+            int nx = x + d[i].x, ny = y + d[i].y;
+            if (!check(nx, ny) || !is_sea(nx, ny)) continue;
+            int d2 = dis + 1;
+            if (grid[nx][ny] == '~' || grid[nx][ny] == 'c' || grid[nx][ny] == 'S') d2 ++;
+            if (d2 < to_deliver_hCost[id][nx][ny]) {
+                to_deliver_hCost[id][nx][ny] = d2;
+                q.push({nx, ny, d2});
+            }
+        }
+    }
+}*/
+void sea_flood_algorithm(int id, int sx, int sy) {
+    struct node {
+        int x, y, dir, dis;
+        bool operator<(const node &b) const {
+            return dis > b.dis;
+        }
+    };
+    priority_queue<node> q;
+
+    for(int i = 0; i < 4; i++) {
+        if(check_boat_can_loc(sx, sy, i)) {
+            q.push({sx, sy, i, 0});
+            to_deliver_hCost[id][sx][sy][i] = 0;
+        }
+    }
+
+    while (!q.empty()) {
+        int x = q.top().x;
+        int y = q.top().y;
+        int dir = q.top().dir;
+        int dis = q.top().dis;
+        q.pop();
+
+        int nx, ny, ndir, ndis;
+
+        //前进
+        nx = x - d[dir].x;
+        ny = y - d[dir].y;
+        ndir = dir;
+        ndis = dis + 1;
+        if (check_boat_loc_slow(nx, ny, ndir)) ndis ++;
+        if (check_boat_can_loc(nx, ny, ndir) && ndis < to_deliver_hCost[id][nx][ny][ndir]) {
+            to_deliver_hCost[id][nx][ny][ndir] = ndis;
+            q.push({nx, ny, ndir, ndis});
+        }
+        //顺时针
+        nx = x - 2 * d[get_anticlockwise(dir)].x;
+        ny = y - 2 * d[get_anticlockwise(dir)].y;
+        ndis = dis + 1;
+        ndir = get_anticlockwise(dir);
+        if (check_boat_loc_slow(nx, ny, ndir)) ndis ++;
+        if (check_boat_can_loc(nx, ny, ndir) && ndis < to_deliver_hCost[id][nx][ny][ndir]) {
+            to_deliver_hCost[id][nx][ny][ndir] = ndis;
+            q.push({nx, ny, ndir, ndis});
+        }
+        //逆时针
+        nx = x + d[dir].x - d[get_clockwise(dir)].x;
+        ny = y + d[dir].y - d[get_clockwise(dir)].y;
+        ndis = dis + 1;
+        ndir = get_clockwise(dir);
+        if (check_boat_loc_slow(nx, ny, ndir)) ndis ++;
+        if (check_boat_can_loc(nx, ny, ndir) && ndis < to_deliver_hCost[id][nx][ny][ndir]) {
+            to_deliver_hCost[id][nx][ny][ndir] = ndis;
+            q.push({nx, ny, ndir, ndis});
+        }
+    }
+}
+
+/*
+ * 检测(x, y)处是否是海域
+ */
+bool is_sea(int x, int y) {
+    return grid[x][y] == '*' || grid[x][y] == 'B' || grid[x][y] == '~' || grid[x][y] == 'S' || grid[x][y] == 'K' || grid[x][y] == 'C' || grid[x][y] == 'c' || grid[x][y] == 'T';
+}
+/*
+void step_compensate_compute(int time) {
+    for(int i = 0; i < boat_num; i++) {
+        boat[i]->stepCompensate = time;
+    }
+}*/

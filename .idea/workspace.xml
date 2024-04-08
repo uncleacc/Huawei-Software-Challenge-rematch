@@ -1,27 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="AutoImportSettings">
-    <option name="autoReloadType" value="SELECTIVE" />
-  </component>
-  <component name="CMakePresetLoader">{
-  &quot;useNewFormat&quot;: true
-}</component>
-  <component name="CMakeReloadState">
-    <option name="reloaded" value="true" />
-  </component>
-  <component name="CMakeRunConfigurationManager">
-    <generated />
-  </component>
   <component name="CMakeSettings">
     <configurations>
       <configuration PROFILE_NAME="Debug" ENABLED="true" CONFIG_NAME="Debug" />
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="46f54e8e-c27c-4c22-a09d-3bc5d1c6f606" name="Changes" comment="">
+    <list default="true" id="2469c216-e602-405c-ae1b-76a8ba92cd55" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/sdk/C++.zip" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/Huawei-Software-Challenge-rematch.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Demo/main.exe" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/clion-Debug-log.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/run_map1.bat" beforeDir="false" afterPath="$PROJECT_DIR$/run_map1.bat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/C++/CmakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/CmakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/C++/include/Buy.h" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/include/Buy.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/C++/include/Debug.h" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/include/Debug.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/C++/include/berth.h" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/include/berth.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/C++/include/boat.h" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/include/boat.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/C++/include/globals.h" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/include/globals.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/C++/include/robot.h" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/include/robot.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/C++/include/utils.h" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/include/utils.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/C++/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/C++/src/Buy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/src/Buy.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/C++/src/Debug.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/C++/src/berth.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/src/berth.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/C++/src/boat.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/src/boat.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/C++/src/execute.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/src/execute.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/C++/src/robot.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/src/robot.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/C++/src/utils.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/src/utils.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,75 +44,45 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="MarkdownSettingsMigration">
-    <option name="stateVersion" value="1" />
-  </component>
-  <component name="ProjectColorInfo">{
-  &quot;associatedIndex&quot;: 8
-}</component>
-  <component name="ProjectId" id="2eZYCANOAaFcbFKqCPLm1NMNPt0" />
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 8
+}]]></component>
+  <component name="ProjectId" id="2eoZ8Fp2mqJoy9I5MR0Hur7FsR8" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "CMake Application.main.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.cidr.known.project.marker": "true",
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "E:/codecraft2024/Huawei-Software-Challenge-rematch/sdk/C++/CmakeLists.txt",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
+    "git-widget-placeholder": "Merging master",
+    "last_opened_file_path": "C:/Users/ouyan/Desktop/craft2024/codecraft2024",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "CMakeSettings",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="E:\codecraft2024\Huawei-Software-Challenge-rematch" />
-    </key>
-  </component>
-  <component name="RunManager">
-    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-      </method>
-    </configuration>
-  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="46f54e8e-c27c-4c22-a09d-3bc5d1c6f606" name="Changes" comment="" />
-      <created>1712113437019</created>
+      <changelist id="2469c216-e602-405c-ae1b-76a8ba92cd55" name="Changes" comment="" />
+      <created>1712572730395</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1712113437019</updated>
-      <workItem from="1712113438315" duration="13747000" />
-      <workItem from="1712130919443" duration="4890000" />
-      <workItem from="1712138575625" duration="1899000" />
-      <workItem from="1712140942558" duration="10298000" />
-      <workItem from="1712151323191" duration="950000" />
+      <updated>1712572730395</updated>
+      <workItem from="1712572732714" duration="48000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
-  </component>
-  <component name="VCPKGProject">
-    <isAutomaticCheckingOnLaunch value="false" />
-    <isAutomaticFoundErrors value="true" />
-    <isAutomaticReloadCMake value="true" />
   </component>
 </project>
