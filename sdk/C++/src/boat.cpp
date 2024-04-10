@@ -11,15 +11,19 @@ Boat::Boat() {
     mbx = -1;
     mby = -1;
     // stepCompensate = 0;
+    goodsPrice = 0;
 }
 
-Boat::Boat(int x, int y) {
+Boat::Boat(int x1, int y1) {
     goods_num = 0;
     status = 0;
     id = boat_num - 1;
     dir = 0;
     mbx = -1;
     mby = -1;
+    x = x1;
+    y = y1;
+    goodsPrice = 0;
     // stepCompensate = 0;
 }
 // bool Boat::navigation() {
@@ -265,11 +269,11 @@ void Boat::set_mbp(int x, int y) {
 //             while (boat_node_path[now.x][now.y][now.dir].x != -1) {
 //                 operation_list.push_back(get_operation(boat_node_path[now.x][now.y][now.dir].dir, now.dir));
 //                 int cur_ts = now.gCost;
-//                 set_obstacle(now.x, now.y, now.dir, step + now.gCost);
+//                 boat_set_obstacle(now.x, now.y, now.dir, step + now.gCost);
 //                 now = boat_node_path[now.x][now.y][now.dir];
 //                 int pre_ts = now.gCost;
 //                 if(pre_ts + 2 == cur_ts) // 经过了减速区
-//                     set_obstacle(now.x, now.y, now.dir, step + now.gCost + 1);
+//                     boat_set_obstacle(now.x, now.y, now.dir, step + now.gCost + 1);
 //             }
 //             reverse(operation_list.begin(), operation_list.end());
 //             info << id << "号船找到了目标，操作序列如下" << endl;
@@ -306,14 +310,14 @@ void Boat::set_mbp(int x, int y) {
 //                 vector<pair<int, int>> ps = get_boat_loc(nx, ny, rt_dir);
 //                 hCost = 0;
 //                 // for(int i = 0; i < ps.size(); i++) {
-//                 //     hCost += to_berth_hCost[berth_id][ps[i].first][ps[i].second];
+//                 //     hCost += boat_to_berth_hCost[berth_id][ps[i].first][ps[i].second];
 //                 // }
 //             }
 //             else if(choice == 1) {
 //                 vector<pair<int, int>> ps = get_boat_loc(nx, ny, rt_dir);
 //                 hCost = 0;
 //                 // for(int i = 0; i < ps.size(); i++) {
-//                 //     hCost += to_deliver_hCost[DeliveryPointId][ps[i].first][ps[i].second];
+//                 //     hCost += boat_to_deliver_hCost[DeliveryPointId][ps[i].first][ps[i].second];
 //                 // }
 //             }
 //             q.push({nx, ny, rt_dir,  gCost, hCost});
@@ -331,14 +335,14 @@ void Boat::set_mbp(int x, int y) {
 //                 vector<pair<int, int>> ps = get_boat_loc(nx, ny, rt_dir);
 //                 hCost = 0;
 //                 // for(int i = 0; i < ps.size(); i++) {
-//                 //     hCost += to_berth_hCost[berth_id][ps[i].first][ps[i].second];
+//                 //     hCost += boat_to_berth_hCost[berth_id][ps[i].first][ps[i].second];
 //                 // }
 //             }
 //             else if(choice == 1) {
 //                 vector<pair<int, int>> ps = get_boat_loc(nx, ny, rt_dir);
 //                 hCost = 0;
 //                 // for(int i = 0; i < ps.size(); i++) {
-//                 //     hCost += to_deliver_hCost[DeliveryPointId][ps[i].first][ps[i].second];
+//                 //     hCost += boat_to_deliver_hCost[DeliveryPointId][ps[i].first][ps[i].second];
 //                 // }
 //             }
 //             q.push({nx, ny, rt_dir, gCost, hCost});
@@ -355,14 +359,14 @@ void Boat::set_mbp(int x, int y) {
 //                 vector<pair<int, int>> ps = get_boat_loc(nx, ny, rt_dir);
 //                 hCost = 0;
 //                 // for(int i = 0; i < ps.size(); i++) {
-//                 //     hCost += to_berth_hCost[berth_id][ps[i].first][ps[i].second];
+//                 //     hCost += boat_to_berth_hCost[berth_id][ps[i].first][ps[i].second];
 //                 // }
 //             }
 //             else if(choice == 1) {
 //                 vector<pair<int, int>> ps = get_boat_loc(nx, ny, rt_dir);
 //                 hCost = 0;
 //                 // for(int i = 0; i < ps.size(); i++) {
-//                 //     hCost += to_deliver_hCost[DeliveryPointId][ps[i].first][ps[i].second];
+//                 //     hCost += boat_to_deliver_hCost[DeliveryPointId][ps[i].first][ps[i].second];
 //                 // }
 //             }
 //             q.push({nx, ny, now.dir,  gCost, hCost});
@@ -411,11 +415,11 @@ void Boat::set_mbp(int x, int y) {
             while (boat_node_path[now.x][now.y][now.dir].x != -1) {
                 operation_list.push_back(get_operation(boat_node_path[now.x][now.y][now.dir].dir, now.dir));
                 int cur_ts = now.gCost;
-                set_obstacle(now.x, now.y, now.dir, step + now.gCost);
+                boat_set_obstacle(now.x, now.y, now.dir, step + now.gCost);
                 now = boat_node_path[now.x][now.y][now.dir];
                 int pre_ts = now.gCost;
                 if(pre_ts + 2 == cur_ts) // 经过了减速区
-                    set_obstacle(now.x, now.y, now.dir, step + now.gCost + 1);
+                    boat_set_obstacle(now.x, now.y, now.dir, step + now.gCost + 1);
             }
             reverse(operation_list.begin(), operation_list.end());
             info << id << "号船找到了目标，操作序列如下" << endl;
@@ -539,11 +543,12 @@ bool Boat::go_mb_point(int berth_id, int DeliveryPointId, int oriMbx, int oriMby
             while (boat_node_path[now.x][now.y][now.dir].x != -1) {
                 operation_list.push_back(get_operation(boat_node_path[now.x][now.y][now.dir].dir, now.dir));
                 int cur_ts = now.gCost;
-                set_obstacle(now.x, now.y, now.dir, step + now.gCost);
+                boat_set_obstacle(now.x, now.y, now.dir, step + now.gCost);
+                int preX = now.x, preY = now.y, preDir = now.dir;
                 now = boat_node_path[now.x][now.y][now.dir];
                 int pre_ts = now.gCost;
                 if(pre_ts + 2 == cur_ts) {  // 经过了减速区
-                    set_obstacle(now.x, now.y, now.dir, step + now.gCost + 1);
+                    boat_set_obstacle(preX, preY, preDir, step + now.gCost + 1);
                 }
             }
             reverse(operation_list.begin(), operation_list.end());
@@ -593,8 +598,8 @@ bool Boat::go_mb_point(int berth_id, int DeliveryPointId, int oriMbx, int oriMby
             // hCost = abs(nx + 2 * d[rt_dir].x - mbx) + abs(ny +  2 * d[rt_dir].y - mby) ;
             // hCost = abs(nx + 2 * d[rt_dir].x - mbx) + abs(ny +  2 * d[rt_dir].y - mby)  + abs(nx + 2 * d[get_clockwise(rt_dir)].x - mbx) + abs(ny +  2 * d[rt_dir].y - mby);
             // hCost = abs(nx + 2 * d[rt_dir].x - mbx) + abs(ny +  2 * d[rt_dir].y - mby) ;
-            if(choice == 0) hCost =  to_berth_hCost[berth_id][nx][ny][rt_dir];
-            else if(choice == 1) hCost = to_deliver_hCost[DeliveryPointId][nx][ny][rt_dir];
+            if(choice == 0) hCost =  boat_to_berth_hCost[berth_id][nx][ny][rt_dir];
+            else if(choice == 1) hCost = boat_to_deliver_hCost[DeliveryPointId][nx][ny][rt_dir];
             q.push({nx, ny, rt_dir,  gCost, hCost});
             boat_node_path[nx][ny][rt_dir] = now;
 
@@ -620,8 +625,8 @@ bool Boat::go_mb_point(int berth_id, int DeliveryPointId, int oriMbx, int oriMby
             // hCost = abs(nx +  2 * d[rt_dir].x - mbx) + abs(ny +  2 * d[rt_dir].y - mby);
             // hCost = abs(nx + 2 * d[rt_dir].x - mbx) + abs(ny +  2 * d[rt_dir].y - mby)  + abs(nx + 2 * d[get_clockwise(rt_dir)].x - mbx) + abs(ny +  2 * d[rt_dir].y - mby);
             // hCost = abs(nx +  2 * d[rt_dir].x - mbx) + abs(ny +  2 * d[rt_dir].y - mby);
-            if(choice == 0) hCost =  to_berth_hCost[berth_id][nx][ny][rt_dir];
-            else if(choice == 1) hCost = to_deliver_hCost[DeliveryPointId][nx][ny][rt_dir];
+            if(choice == 0) hCost =  boat_to_berth_hCost[berth_id][nx][ny][rt_dir];
+            else if(choice == 1) hCost = boat_to_deliver_hCost[DeliveryPointId][nx][ny][rt_dir];
             q.push({nx, ny, rt_dir, gCost, hCost});
             boat_node_path[nx][ny][rt_dir] = now;
 
@@ -648,8 +653,8 @@ bool Boat::go_mb_point(int berth_id, int DeliveryPointId, int oriMbx, int oriMby
             // hCost = abs(nx + 2 * d[now.dir].x - mbx) + abs(ny +  2 * d[now.dir].y - mby);
             // hCost = abs(nx + 2 * d[now.dir].x - mbx) + abs(ny +  2 * d[now.dir].y - mby)  + abs(nx + 2 * d[get_clockwise(now.dir)].x - mbx) + abs(ny +  2 * d[now.dir].y - mby);
             // hCost = abs(nx + 2 * d[now.dir].x - mbx) + abs(ny +  2 * d[now.dir].y - mby);
-            if(choice == 0) hCost =  to_berth_hCost[berth_id][nx][ny][now.dir];
-            else if(choice == 1) hCost = to_deliver_hCost[DeliveryPointId][nx][ny][now.dir];
+            if(choice == 0) hCost =  boat_to_berth_hCost[berth_id][nx][ny][now.dir];
+            else if(choice == 1) hCost = boat_to_deliver_hCost[DeliveryPointId][nx][ny][now.dir];
             q.push({nx, ny, now.dir,  gCost, hCost});
             boat_node_path[nx][ny][now.dir] = now;
         }
@@ -666,9 +671,9 @@ void Boat::move() {
         mbx = -1;
         mby = -1;
         warn << "Boat " << id << " " <<"船只轨迹为空" << endl;
-        set_obstacle(x, y, dir, step); // 船只没有动，设置当前位置为障碍物
+        boat_set_obstacle(x, y, dir, step); // 船只没有动，设置当前位置为障碍物
     }
-    if(!operation_list.empty()) {
+    else {
         int op = operation_list[0];
         exec(op);
     }
@@ -777,4 +782,17 @@ int Boat::find_max_goods() {
         }
     }
     return maxBerthId;
+}
+
+int Boat::find_nearest_delivery_id() {
+    int res = 0;
+    int dis = boat_to_deliver_hCost[0][x][y][dir];
+    if(id == 0) error << "find_nearest_delivery_id: " << dis << endl;
+    for (int i = 1; i < delivery_point.size(); i++) {
+        if (boat_to_deliver_hCost[i][x][y][dir] < dis) {
+            res = i;
+            dis = boat_to_deliver_hCost[i][x][y][dir];
+        }
+    }
+    return res;
 }

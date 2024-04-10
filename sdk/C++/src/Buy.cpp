@@ -19,7 +19,7 @@ bool Buy::buy_robot(int idx) {
     robot_num++;
     robot[robot_num - 1] = new Robot(x, y);
     originalPosition[{x, y}] = 'R';
-    info <<"step" << step << " Buy Robot" << boat_num - 1 << " in " << idx
+    info <<"step" << step << " Buy Robot" << robot_num - 1 << " in " << idx
             << " robot_purchase_point ("<< robot_purchase_point[idx].first << "," << robot_purchase_point[idx].second << ")" << endl;
     return true;
 }

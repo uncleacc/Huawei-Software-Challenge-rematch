@@ -38,6 +38,8 @@ bool check_robot_can_loc(int x, int y);
  */
 bool check_boat_can_loc(int x, int y, int ts);
 
+bool check_boat_can_loc_dir(int x, int y, int dir);
+
 /*
  * 检测(x, y)处是否有slow点
  */
@@ -106,7 +108,8 @@ void open_berth(int berth_id);
 /*
  * 将(x,y,dir)在ts时刻设置为障碍
  */
-void set_obstacle(int x, int y, int dir, int ts);
+void boat_set_obstacle(int x, int y, int dir, int ts);
+void robot_set_obstacle(int x, int y, int ts);
 
 /*
  * 帧率补偿计算
@@ -118,8 +121,14 @@ void pre_process();
 /*void sea_flood_algorithm(int id, int x, int y);*/
 void sea_flood_algorithm(int id, int x, int y);
 
-void berth_flood_algorithm(int id, int x, int y);
+void berth_flood_algorithm(int id);
+
+void robot_berth_flood_algorithm(int berth_id);
 
 bool is_sea(int x, int y);
+
+int getDirByTwoPoint(int px, int py, int cx, int cy);
+
+double get_metrics(int value, int distance, int vanishtime);
 
 #endif
