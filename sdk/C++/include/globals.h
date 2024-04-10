@@ -51,12 +51,13 @@ const int N = 210;
 const int M = 100;
 const int boat_price = 8000, robot_price = 2000;
 
-const int robot_max_num = 18;
+
+const int robot_max_num = 20;
 const int boat_max_num = 2;
 
 
 extern int robot_num, boat_num, berth_num;
-extern int money, boat_capacity, step;
+extern int money, boat_capacity, step, zhen;
 extern int all_goods_cnt;
 extern long long all_goods_val;
 extern double r1[3], r2[3], r3[3];
@@ -67,6 +68,12 @@ extern bitset<15001> exist_obstacle[N][N];
 extern std::map<std::pair<int, int>, char> originalPosition;
 extern std::map<std::pair<int, int>, int> originalValue;
 extern std::map<std::pair<int, int>, bool> slow_points;
+
+// extern char exist_id[N][N][15001];
+/*extern int to_deliver_hCost[11][N][N];
+extern int to_berth_hCost[15][N][N];*/
+extern int to_deliver_hCost[11][N][N][5];
+extern int to_berth_hCost[15][N][N][5];
 
 struct Dir {
     int x, y;
@@ -84,11 +91,8 @@ struct boat_sport_node{
     int gCost;  // 起始点到当前点的实际代价
     int hCost;  // 从当前点到目标点的预估代价----曼哈顿距离
     bool operator<(const boat_sport_node &b) const {
-        return gCost  > b.gCost ;
-        // return hCost >  b.hCost;
         // return gCost + hCost > b.gCost + b.hCost;
-
-        // return gCost + hCost > b.gCost + b.hCost;
+        return  hCost > b.hCost;
     }
 };
 
@@ -111,5 +115,6 @@ extern vector<pair<int, int>> robot_purchase_point;
 extern vector<pair<int, int>> boat_purchase_point;
 extern vector<pair<int, int>> delivery_point;
 extern bool boat_vis[n][n][5];
+extern int boat_dis[n][n][5];
 extern boat_sport_node  boat_node_path[n][n][4];
 #endif

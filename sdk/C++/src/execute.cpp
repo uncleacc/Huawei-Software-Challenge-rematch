@@ -15,6 +15,17 @@ execute::~execute() {
 
 void execute::execute_robot() {
     for (int i = 0; i < robot_num; i++) {
+        /*if(i < 6 && robot[i]->is_first_move) {
+            robot[i]->mbx = 50;
+            robot[i]->mby = 58;
+            if(robot[i]->x == robot[i]->mbx && robot[i]->y == robot[i]->mby) {
+                robot[i]->is_first_move = false;
+            } else {
+                int dir = robot[i]->goto_mbp();
+                robot[i]->move(dir);
+            }
+            continue;
+        }*/
         if (robot[i]->goods == 0) {
             int res = robot[i]->get_good();
             if (res == 0) {
@@ -316,22 +327,6 @@ void execute::execute_buy() {
     if (isNeedBuyRobot != -1) {
         buy->buy_robot(isNeedBuyRobot);
     }
-/*test    if(step == 1) {
-        buy->buy_boat(true);
-    }
-    if(step > 1 && step < 99) {
-        if(boat[0]->operation_list.empty()) boat[0]->go_mb_point(-1, -1, 111, 30, 2);
-        boat[0]->move();
-    }
-    if(step == 100) {
-        buy->buy_boat(true);
-    }
-    if(step > 100) {
-        if(boat[0]->operation_list.empty()) boat[0]->go_mb_point(-1, -1, 111, 100, 2);
-        boat[0]->move();
-        if(boat[1]->operation_list.empty()) boat[1]->go_mb_point(-1, -1, 110, 10, 2);
-        boat[1]->move();
-    }*/
 }
 
 

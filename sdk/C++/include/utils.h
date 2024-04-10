@@ -114,4 +114,13 @@ void set_obstacle(int x, int y, int dir, int ts);
  *//*
 void step_compensate_compute(int time);*/
 
+void pre_process();
+
+/*void sea_flood_algorithm(int id, int x, int y);*/
+void sea_flood_algorithm(int id, int x, int y);
+
+void berth_flood_algorithm(int id, int x, int y);
+
+bool is_sea(int x, int y);
+
 #endif

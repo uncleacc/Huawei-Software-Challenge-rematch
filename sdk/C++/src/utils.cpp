@@ -266,6 +266,166 @@ bool locate_berth_area(int x, int y, int berth_id) {
     return false;
 }
 
+void pre_process() {
+    memset(to_deliver_hCost, 0x3f, sizeof to_deliver_hCost);
+    memset(to_berth_hCost, 0x3f, sizeof to_berth_hCost);
+    for(int i = 0; i < delivery_point.size(); i++) {
+        sea_flood_algorithm(i, delivery_point[i].first, delivery_point[i].second);
+    }
+    for(int i = 0; i < berth_num; i++) {
+        berth_flood_algorithm(i, berth[i]->x, berth[i]->y);
+    }
+}
+
+void berth_flood_algorithm(int id, int sx, int sy) {
+    struct node {
+        int x, y, dir, dis;
+        bool operator<(const node &b) const {
+            return dis > b.dis;
+        }
+    };
+    priority_queue<node> q;
+    for(int i = 0; i < 4; i++) {
+        if(check_boat_can_loc(sx, sy, i)) {
+            q.push({sx, sy, i, 0});
+            to_berth_hCost[id][sx][sy][i] = 0;
+        }
+    }
+
+    while (!q.empty()) {
+        int x = q.top().x;
+        int y = q.top().y;
+        int dir = q.top().dir;
+        int dis = q.top().dis;
+        q.pop();
+
+        int nx, ny, ndir, ndis;
+
+        //前进
+        nx = x - d[dir].x;
+        ny = y - d[dir].y;
+        ndir = dir;
+        ndis = dis + 1;
+        if (check_boat_loc_slow(nx, ny, ndir)) ndis ++;
+        if (check_boat_can_loc(nx, ny, ndir) && ndis < to_berth_hCost[id][nx][ny][ndir]) {
+            to_berth_hCost[id][nx][ny][ndir] = ndis;
+            q.push({nx, ny, ndir, ndis});
+        }
+        //顺时针
+        nx = x - 2 * d[get_anticlockwise(dir)].x;
+        ny = y - 2 * d[get_anticlockwise(dir)].y;
+        ndis = dis + 1;
+        ndir = get_anticlockwise(dir);
+        if (check_boat_loc_slow(nx, ny, ndir)) ndis ++;
+        if (check_boat_can_loc(nx, ny, ndir) && ndis < to_berth_hCost[id][nx][ny][ndir]) {
+            to_berth_hCost[id][nx][ny][ndir] = ndis;
+            q.push({nx, ny, ndir, ndis});
+        }
+        //逆时针
+        nx = x + d[dir].x - d[get_clockwise(dir)].x;
+        ny = y + d[dir].y - d[get_clockwise(dir)].y;
+        ndis = dis + 1;
+        ndir = get_clockwise(dir);
+        if (check_boat_loc_slow(nx, ny, ndir)) ndis ++;
+        if (check_boat_can_loc(nx, ny, ndir) && ndis < to_berth_hCost[id][nx][ny][ndir]) {
+            to_berth_hCost[id][nx][ny][ndir] = ndis;
+            q.push({nx, ny, ndir, ndis});
+        }
+    }
+}
+
+/*void sea_flood_algorithm(int id, int sx, int sy) {
+    struct node {
+        int x, y, dis;
+        bool operator<(const node &b) const {
+            return dis > b.dis;
+        }
+    };
+    priority_queue<node> q;
+    q.push({sx, sy, 0});
+    to_deliver_hCost[id][sx][sy] = 0;
+    while (!q.empty()) {
+        int x = q.top().x;
+        int y = q.top().y;
+        int dis = q.top().dis;
+        q.pop();
+
+        for (int i = 0; i < 4; i++) {
+            int nx = x + d[i].x, ny = y + d[i].y;
+            if (!check(nx, ny) || !is_sea(nx, ny)) continue;
+            int d2 = dis + 1;
+            if (grid[nx][ny] == '~' || grid[nx][ny] == 'c' || grid[nx][ny] == 'S') d2 ++;
+            if (d2 < to_deliver_hCost[id][nx][ny]) {
+                to_deliver_hCost[id][nx][ny] = d2;
+                q.push({nx, ny, d2});
+            }
+        }
+    }
+}*/
+void sea_flood_algorithm(int id, int sx, int sy) {
+    struct node {
+        int x, y, dir, dis;
+        bool operator<(const node &b) const {
+            return dis > b.dis;
+        }
+    };
+    priority_queue<node> q;
+
+    for(int i = 0; i < 4; i++) {
+        if(check_boat_can_loc(sx, sy, i)) {
+            q.push({sx, sy, i, 0});
+            to_deliver_hCost[id][sx][sy][i] = 0;
+        }
+    }
+
+    while (!q.empty()) {
+        int x = q.top().x;
+        int y = q.top().y;
+        int dir = q.top().dir;
+        int dis = q.top().dis;
+        q.pop();
+
+        int nx, ny, ndir, ndis;
+
+        //前进
+        nx = x - d[dir].x;
+        ny = y - d[dir].y;
+        ndir = dir;
+        ndis = dis + 1;
+        if (check_boat_loc_slow(nx, ny, ndir)) ndis ++;
+        if (check_boat_can_loc(nx, ny, ndir) && ndis < to_deliver_hCost[id][nx][ny][ndir]) {
+            to_deliver_hCost[id][nx][ny][ndir] = ndis;
+            q.push({nx, ny, ndir, ndis});
+        }
+        //顺时针
+        nx = x - 2 * d[get_anticlockwise(dir)].x;
+        ny = y - 2 * d[get_anticlockwise(dir)].y;
+        ndis = dis + 1;
+        ndir = get_anticlockwise(dir);
+        if (check_boat_loc_slow(nx, ny, ndir)) ndis ++;
+        if (check_boat_can_loc(nx, ny, ndir) && ndis < to_deliver_hCost[id][nx][ny][ndir]) {
+            to_deliver_hCost[id][nx][ny][ndir] = ndis;
+            q.push({nx, ny, ndir, ndis});
+        }
+        //逆时针
+        nx = x + d[dir].x - d[get_clockwise(dir)].x;
+        ny = y + d[dir].y - d[get_clockwise(dir)].y;
+        ndis = dis + 1;
+        ndir = get_clockwise(dir);
+        if (check_boat_loc_slow(nx, ny, ndir)) ndis ++;
+        if (check_boat_can_loc(nx, ny, ndir) && ndis < to_deliver_hCost[id][nx][ny][ndir]) {
+            to_deliver_hCost[id][nx][ny][ndir] = ndis;
+            q.push({nx, ny, ndir, ndis});
+        }
+    }
+}
+
+/*
+ * 检测(x, y)处是否是海域
+ */
+bool is_sea(int x, int y) {
+    return grid[x][y] == '*' || grid[x][y] == 'B' || grid[x][y] == '~' || grid[x][y] == 'S' || grid[x][y] == 'K' || grid[x][y] == 'C' || grid[x][y] == 'c' || grid[x][y] == 'T';
+}
 /*
 void step_compensate_compute(int time) {
     for(int i = 0; i < boat_num; i++) {
