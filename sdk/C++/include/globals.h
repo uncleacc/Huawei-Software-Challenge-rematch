@@ -12,6 +12,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <bitset>
+#include <unordered_map>
 
 
 #include "robot.h"
@@ -52,28 +53,35 @@ const int M = 100;
 const int boat_price = 8000, robot_price = 2000;
 
 
-const int robot_max_num = 20;
-const int boat_max_num = 2;
+const int robot_max_num = 18;
+const int boat_max_num = 1;
 
-
+extern int value_radio[21];
+extern int ban_value_radio[21];
 extern int robot_num, boat_num, berth_num;
 extern int money, boat_capacity, step, zhen;
 extern int all_goods_cnt;
 extern long long all_goods_val;
 extern double r1[3], r2[3], r3[3];
+extern int total_banyun_num;
 
 extern char grid[N][N];
-extern int gds[N][N], goods_vanish_time[N][N];
-extern bitset<15001> exist_obstacle[N][N];
+extern int gds[N][N], lock_goods[N][N], goods_vanish_time[N][N];
+extern bitset<15001> boat_exist_obstacle[N][N];
+extern bitset<15001> robot_exist_obstacle[N][N];
 extern std::map<std::pair<int, int>, char> originalPosition;
 extern std::map<std::pair<int, int>, int> originalValue;
 extern std::map<std::pair<int, int>, bool> slow_points;
+extern map<std::pair<int, int>, int> Berth2ID;
+extern map<pair<int, int>, int> KaoBerth2ID;
+
 
 // extern char exist_id[N][N][15001];
-/*extern int to_deliver_hCost[11][N][N];
-extern int to_berth_hCost[15][N][N];*/
-extern int to_deliver_hCost[11][N][N][5];
-extern int to_berth_hCost[15][N][N][5];
+/*extern int boat_to_deliver_hCost[11][N][N];
+extern int boat_to_berth_hCost[15][N][N];*/
+extern int boat_to_deliver_hCost[11][N][N][5];
+extern int boat_to_berth_hCost[15][N][N][5];
+extern int robot_to_berth_hCost[15][N][N];
 
 struct Dir {
     int x, y;
@@ -81,6 +89,13 @@ struct Dir {
         return x == b.x && y == b.y;
     }
 };
+
+struct GoodsInfo {
+    int x, y, value, vanish_time;
+    bool locked;
+    int nearest_berth;
+};
+
 
 
 /*
@@ -117,4 +132,5 @@ extern vector<pair<int, int>> delivery_point;
 extern bool boat_vis[n][n][5];
 extern int boat_dis[n][n][5];
 extern boat_sport_node  boat_node_path[n][n][4];
+extern vector<GoodsInfo> goods_infos;
 #endif

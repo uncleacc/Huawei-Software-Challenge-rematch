@@ -20,6 +20,7 @@ public:
     bool go_mb_point(int berth_id, int DeliveryPointId, int oriMbx, int oriMby, int choice);
     int find_max_goods();
     int getBerthIdByPoint();
+    int find_nearest_delivery_id();
 
 
 public:
@@ -31,7 +32,7 @@ public:
 
     int mbBerthId;
     // int stepCompensate;     //跳帧补偿
-    int goodsPrice;   // 货物金额
+    int goodsPrice;
 
     std::vector<int> berthBoard;
     std::vector<int> operation_list;  // 0: 前进，1: 左转，2: 右转

@@ -9,6 +9,7 @@ public:
     void close();
     void set_locked(bool locked);
 
+
 public:
     int x, y;            // 泊位左上角坐标
     int loading_speed;   // 装载速度
@@ -22,7 +23,11 @@ public:
     int klux, kluy, krdx, krdy;   // 靠泊区左上角和右下角坐标
     bool is_locked;        //有船要来
 
-    std::vector<int> berthGoodsPrice;
+
+    vector<pair<int, int>> berthCoordinates;
+    vector<pair<int, int>> kaoBerthCoordinates;
+    vector<int> berthGoodsPrice;
+
 
 };
 

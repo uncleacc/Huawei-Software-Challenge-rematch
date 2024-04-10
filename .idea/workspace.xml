@@ -6,6 +6,9 @@
   <component name="CMakePresetLoader"><![CDATA[{
   "useNewFormat": true
 }]]></component>
+  <component name="CMakeReloadState">
+    <option name="reloaded" value="true" />
+  </component>
   <component name="CMakeRunConfigurationManager">
     <generated>
       <config projectName="CodeCraftSDK" targetName="main" />
@@ -17,15 +20,18 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2469c216-e602-405c-ae1b-76a8ba92cd55" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sdk/C++.zip" afterDir="false" />
+    <list default="true" id="b5234a60-f821-4274-a468-04cd75a3b76e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run_all_maps.bat" beforeDir="false" afterPath="$PROJECT_DIR$/run_all_maps.bat" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/run_map1.bat" beforeDir="false" afterPath="$PROJECT_DIR$/run_map1.bat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/C++/include/berth.h" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/include/berth.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/C++/include/boat.h" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/include/boat.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sdk/C++/include/globals.h" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/include/globals.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sdk/C++/include/robot.h" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/include/robot.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sdk/C++/include/utils.h" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/include/utils.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sdk/C++/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdk/C++/src/Buy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/src/Buy.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sdk/C++/src/boat.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/src/boat.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sdk/C++/src/execute.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/src/execute.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sdk/C++/src/robot.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sdk/C++/src/robot.cpp" afterDir="false" />
@@ -43,11 +49,11 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo">{
-  &quot;customColor&quot;: &quot;&quot;,
-  &quot;associatedIndex&quot;: 8
-}</component>
-  <component name="ProjectId" id="2eoZ8Fp2mqJoy9I5MR0Hur7FsR8" />
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 8
+}]]></component>
+  <component name="ProjectId" id="2etRfLHa23ho6O87xEenGgAJtdD" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -68,6 +74,7 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
+    "structure.view.defaults.are.configured": "true",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -86,18 +93,21 @@
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="2469c216-e602-405c-ae1b-76a8ba92cd55" name="Changes" comment="" />
-      <created>1712572730395</created>
+      <changelist id="b5234a60-f821-4274-a468-04cd75a3b76e" name="Changes" comment="" />
+      <created>1712721991138</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1712572730395</updated>
-      <workItem from="1712572732714" duration="48000" />
-      <workItem from="1712634916449" duration="613000" />
-      <workItem from="1712720848123" duration="164000" />
+      <updated>1712721991138</updated>
+      <workItem from="1712721993440" duration="14217000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VCPKGProject">
+    <isAutomaticCheckingOnLaunch value="false" />
+    <isAutomaticFoundErrors value="true" />
+    <isAutomaticReloadCMake value="true" />
   </component>
 </project>

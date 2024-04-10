@@ -19,7 +19,7 @@ bool Buy::buy_robot(int idx) {
     robot_num++;
     robot[robot_num - 1] = new Robot(x, y);
     originalPosition[{x, y}] = 'R';
-    info <<"step" << step << " Buy Robot" << boat_num - 1 << " in " << idx
+    info <<"step" << step << " Buy Robot" << robot_num - 1 << " in " << idx
             << " robot_purchase_point ("<< robot_purchase_point[idx].first << "," << robot_purchase_point[idx].second << ")" << endl;
     return true;
 }
@@ -37,25 +37,28 @@ bool Buy::buy_boat(int idx) {
     // TODO 给船赋予可去的区间
     if (idx == 0) {
         info << "step" << step << " Buy Boat" << idx << " in " << idx;
-        for(int i = 0; i < berth_num; i++) {
-            if(berth[i]->is_locked == false)
-                boat[boat_num - 1]->add_berth(i);
+        // for(int i = 0; i < berth_num; i++) {
+        //     if(berth[i]->is_locked == false)
+        //         boat[boat_num - 1]->add_berth(i);
+        // }
+        for (int i = 0; i < berth_num; i++) {
+            boat[boat_num - 1]->berthBoard.push_back(i);
         }
     } else {
         info << "step" << step << " Buy Boat··" << idx << " in " << idx;
-        boat[boat_num - 1]->berthBoard.push_back(0);
-        boat[boat_num - 1]->berthBoard.push_back(1);
+        // boat[boat_num - 1]->berthBoard.push_back(0);
+        // boat[boat_num - 1]->berthBoard.push_back(1);
         // boat[boat_num - 1]->berthBoard.push_back(2);
         // boat[boat_num - 1]->berthBoard.push_back(3);
         // boat[boat_num - 1]->berthBoard.push_back(4);
 
         // TODO 清空函数
-        boat[0]->berthBoard.clear();
+        // boat[0]->berthBoard.clear();
         // boat[0]->berthBoard.push_back(0);
         // boat[0]->berthBoard.push_back(1);
-        boat[0]->berthBoard.push_back(2);
-        boat[0]->berthBoard.push_back(3);
-        boat[0]->berthBoard.push_back(4);
+        // boat[0]->berthBoard.push_back(2);
+        // boat[0]->berthBoard.push_back(3);
+        // boat[0]->berthBoard.push_back(4);
     }
     info <<"step" << step << " Buy Boat" << boat_num - 1 << " in " << idx
         << " boat_purchase_point ("<< boat_purchase_point[idx].first << "," << boat_purchase_point[idx].second << ")" << endl;

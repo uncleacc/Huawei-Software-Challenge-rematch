@@ -13,19 +13,20 @@ execute::~execute() {
 
 }
 
+/*
 void execute::execute_robot() {
     for (int i = 0; i < robot_num; i++) {
-        /*if(i < 6 && robot[i]->is_first_move) {
-            robot[i]->mbx = 50;
-            robot[i]->mby = 58;
-            if(robot[i]->x == robot[i]->mbx && robot[i]->y == robot[i]->mby) {
-                robot[i]->is_first_move = false;
-            } else {
-                int dir = robot[i]->goto_mbp();
-                robot[i]->move(dir);
-            }
-            continue;
-        }*/
+        // if(i < 6 && robot[i]->is_first_move) {
+        //     robot[i]->mbx = 50;
+        //     robot[i]->mby = 58;
+        //     if(robot[i]->x == robot[i]->mbx && robot[i]->y == robot[i]->mby) {
+        //         robot[i]->is_first_move = false;
+        //     } else {
+        //         int dir = robot[i]->goto_mbp();
+        //         robot[i]->move(dir);
+        //     }
+        //     continue;
+        // }
         if (robot[i]->goods == 0) {
             int res = robot[i]->get_good();
             if (res == 0) {
@@ -63,7 +64,79 @@ void execute::execute_robot() {
         }
     }
 }
+*/
 
+void execute::execute_robot() {
+    for (int i = 0; i < robot_num; i++) {
+        if(robot[i]->mbx == -1 && robot[i]->mby == -1) {
+            if (robot[i]->goods == 0) {
+                int res = -1;
+                while(res == -1) {
+                    info << "set_goods_for_mb begin" << endl;
+                    info << "robot[" << i << "]->mbx:" << robot[i]->mbx << " robot[" << i << "]->mby:" << robot[i]->mby << endl;
+                    robot[i]->set_goods_for_mb();
+                    info << "robot[" << i << "]->mbx:" << robot[i]->mbx << " robot[" << i << "]->mby:" << robot[i]->mby << endl;
+                    info << "set_goods_for_mb end" << endl;
+
+                    error << "find_mbGoodsPoint begin" << endl;
+                    res = robot[i]->find_mbGoodsPoint();
+                    if (res == -1) {
+                        goods_infos.erase(std::remove_if(goods_infos.begin(), goods_infos.end(),
+                            [&](const GoodsInfo &o){
+                                return o.x == robot[i]->mbx && o.y == robot[i]->mby;
+                            }),
+                            goods_infos.end());
+                        robot[i]->mbx = -1;
+                        robot[i]->mby = -1;
+                    }
+                    error << "find_mbGoodsPoint end" << endl;
+
+                }
+
+
+                // info << "set_goods_for_mb begin" << endl;
+                // info << "robot[" << i << "]->mbx:" << robot[i]->mbx << " robot[" << i << "]->mby:" << robot[i]->mby << endl;
+                // robot[i]->set_goods_for_mb();
+                // info << "robot[" << i << "]->mbx:" << robot[i]->mbx << " robot[" << i << "]->mby:" << robot[i]->mby << endl;
+                // info << "set_goods_for_mb end" << endl;
+
+                // error << "find goods begin" << endl;
+                // bool flag = robot[i]->find_mbGoodsPoint();
+                // if (flag == false) {
+                //     robot[i]->mbx = -1;
+                //     robot[i]->mby = -1;
+                // }
+                // error << "find goods end" << endl;
+            }
+            else if (robot[i]->goods == 1 ) {
+
+                info << "set_berth_for_mb begin" << endl;
+                info << "robot[" << i << "]->mbx:" << robot[i]->mbx << " robot[" << i << "]->mby:" << robot[i]->mby << endl;
+                int target_berthId = robot[i]->set_berth_for_mb();
+                info << "robot[" << i << "]->mbx:" << robot[i]->mbx << " robot[" << i << "]->mby:" << robot[i]->mby << endl;
+                info << "set_berth_for_mb end" << endl;
+
+                error << "find berth begin" << endl;
+                robot[i]->find_mbBerthPoint(target_berthId);
+                error << "find berth end" << endl;
+            }
+        }
+        else if (robot[i]->x == robot[i]->mbx && robot[i]->y == robot[i]->mby) {
+            if(grid[robot[i]->x][robot[i]->y] == 'B') {
+                info << "robot[i]->x:" << robot[i]->x << " robot[i]->y:" << robot[i]->y << " goods:" << robot[i]->goods << endl;
+                robot[i]->put_good();
+            }
+            else{
+                robot[i]->get_good();
+                info << "robot " << i << "goods:" << robot[i]->goods << endl;
+            }
+        }
+        else {
+            robot[i]->move();
+
+        }
+    }
+}
 
 void execute::execute_boat() {
     for (int i = 0; i < boat_num; ++i) {
@@ -72,17 +145,60 @@ void execute::execute_boat() {
             boat[i]->goodsPrice = 0;
         }
         if (boat[i]->mbx == -1 && boat[i]->mby == -1) {
-             // info  << "Boat " << boat[i]->id << " no mb point" << endl;
+            for (int j = 0; j < delivery_point.size(); j++) {
+                if (boat[i]->x == delivery_point[j].first && boat[i]->y == delivery_point[j].second) {
+                    boat[i]->goodsPrice = 0;
+                }
+            }
+            if (boat[i]->status == 2) {
+                info  << "Boat " << boat[i]->id << " loading" << endl;
+                int currentBerthId = boat[i]->getBerthIdByPoint();
+                info << "currentBerthId:" << currentBerthId << endl;
+                if (berth[currentBerthId]->num <= 0 || boat[i]->goods_num >= boat_capacity || step >= 14700) {  // TODO 后续要封装成是否离开当前泊位的函数   boat[i]->goods_num == boat_capacity
+                    boat[i]->operation_list.push_back(DEPT_OP);
+                } else {
+                    // 先执行船舶命令，再进行装载!!!!!!!,一旦发送回到主航道的指令后续无法装载
+                    int load_num = std::min(berth[currentBerthId]->num, std::min(berth[currentBerthId]->loading_speed, boat_capacity - boat[i]->goods_num));
+                    boat[i]->goods_num += load_num;
+                    berth[currentBerthId]->num -= load_num;
+                    for(int load_i = 0; load_i < load_num; load_i++) {
+                        boat[i]->goodsPrice += berth[currentBerthId]->berthGoodsPrice[0];
+                        berth[currentBerthId]->berthGoodsPrice.erase(berth[currentBerthId]->berthGoodsPrice.begin());
+                    }
+                }
+            }
+            else if(boat[i]->status == 0) {
+                bool isCanBuyRobot = (robot_num >= 8 && robot_num < robot_max_num && boat[i]->goodsPrice + money >= 2000);
+                // 去送货点
+                if(boat[i]->goods_num >= boat_capacity ||  step >= 14700 || isCanBuyRobot) {
+                    info << "Boat " << boat[i]->id << "的价值: " << boat[i]->goodsPrice << " 数量: " << boat[i]->goods_num << endl;
+                    int delivery_id = boat[i]->find_nearest_delivery_id();  // map2
+                    info <<  "Boat " << boat[i]->id << " find nearest delivery id " << delivery_id << endl;
+                    boat[i]->go_mb_point(-1,delivery_id, delivery_point[delivery_id].first, delivery_point[delivery_id].second, 1);
+                }
+                    // 去泊位
+                else {
+                    int maxBerthId = boat[i]->find_max_goods();
+                    info << "Boat " << boat[i]->id << " find maxBerthId " << maxBerthId << endl;
+                    if(maxBerthId != -1) boat[i]->go_mb_point(maxBerthId, -1, berth[maxBerthId]->x, berth[maxBerthId]->y,0);
+                    else error << "船" << boat[i]->id << "没有找到目标泊位" << endl;                }
+            }
+        }
+        info << "Boat " << boat[i]->id << " begin move" << endl;
+        boat[i]->move();
+        info << "Boat " << boat[i]->id << " move done" << endl;
+        /*if (boat[i]->mbx == -1 && boat[i]->mby == -1) {
+            // info  << "Boat " << boat[i]->id << " no mb point" << endl;
             if (boat[i]->status == 0){
-                // TODO 船没有目标，需要根据当前状态确定目标：1. 船找泊位。2. 船找出售点
-                //  TODO 方案1：如果船没有装满,船去泊位列表的下一个泊位装载货物
-                //  TODO 方案2：如果船没有装满，船去所有泊位中货物最多的泊位装载货物，并给予泊位的货物数量-船容量，其他船寻找货物最多泊位时可以不优先选他
-                //  TODO 方案3：如果船没有装满，船去泊位列表中货物最多的泊位装载货物，主要起到一个分区的左右，节省船移动时间。
-                bool isGoBerth = robot_num < robot_max_num && boat[i]->goodsPrice + money >= 2000 && step > robot_max_num;
-                if (boat[i]->goods_num > boat_capacity - 2 || isGoBerth) {  // TODO 后续需要封装成去交货点的函数
-                    // int delivery_id = i == 0 ? 0 : delivery_point.size() -1;  // map1
-                    int delivery_id = i == 0 ? delivery_point.size() -1 : 0;  // map2
 
+                if (boat[i]->goods_num <= boat_capacity - 2) {   // TODO 后续需要封装成去泊位的函数
+                    int maxBerthId = boat[i]->find_max_goods();
+                    info << "Boat " << boat[i]->id << " find maxBerthId " << maxBerthId << endl;
+                    if(maxBerthId != -1) boat[i]->go_mb_point(maxBerthId, -1, berth[maxBerthId]->x, berth[maxBerthId]->y,0);
+                    else error << "船" << boat[i]->id << "没有找到目标泊位" << endl;
+                } else if (boat[i]->goods_num > boat_capacity - 2) {  // TODO 后续需要封装成去交货点的函数
+
+                    int delivery_id = i == 0 ? delivery_point.size() -1 : 0;  // map2
                     boat[i]->go_mb_point(-1,delivery_id, delivery_point[delivery_id].first, delivery_point[delivery_id].second, 1);
                 }else  if (boat[i]->goods_num <= boat_capacity - 2 ) {   // TODO 后续需要封装成去泊位的函数
 
@@ -115,8 +231,8 @@ void execute::execute_boat() {
                     boat[i]->goods_num += load_num;
                     berth[currentBerthId]->num -= load_num;
 
-                    for (int load_num_i = 0; load_num_i < load_num; load_num_i++) {
-                        boat[i]->goodsPrice += berth[currentBerthId]->berthGoodsPrice[0];
+                    for(int load_i = 0; load_i < load_num; load_i++) {
+
                         berth[currentBerthId]->berthGoodsPrice.erase(berth[currentBerthId]->berthGoodsPrice.begin());
                     }
                 }
@@ -124,11 +240,14 @@ void execute::execute_boat() {
             else if (boat[i]->status == 1) {
                 // 无法操作,pass
             }
-        }
-        info << "Boat " << boat[i]->id << " begin move" << endl;
-        boat[i]->move();
-        info << "Boat " << boat[i]->id << " move done" << endl;
+        }*/
     }
+    // for (int i = 0; i < boat_num; ++i) {
+    //     info << "Boat " << boat[i]->id << " begin move" << endl;
+    //     boat[i]->move();
+    //     info << "Boat " << boat[i]->id << " move done" << endl;
+    // }
+
     /*
     for (int i = 0; i < boat_num; ++i) {
         if (boat[i]->mbx == -1 && boat[i]->mby == -1) {
@@ -301,28 +420,26 @@ void execute::execute_boat() {
  */
 
 void execute::execute_buy() {
-    // TODO 判断是否需要买船(后续封装成函数),返回值为-1表示不需要买船,返回0表示在第一个点买,返回1表示在第二个点买...
-    //  TODO 判断是否需要买船，根据船的周期计算出船一趟可以运多少货物，根据机器人平均运货距离得到这个周期之内可以运输多少货物，如果超过该船的上限则增加船。
-    // int isNeedBuyBoat = fun1();
-    int isNeedBuyBoat = -1;
-    int isNeedBuyRobot = -1;
+     int isNeedBuyBoat = -1;
+     int isNeedBuyRobot = -1;
 
-    if (money >= 8000) {
+     if (robot_num < 8) {
+         isNeedBuyBoat = -1;
+         isNeedBuyRobot = step % robot_purchase_point.size() ;  // TODO 买机器人,具体在哪买待确定
+     }
+     else if (money >= 8000) {
         if (boat_num < 1) {
             isNeedBuyBoat = 0;  // TODO 开局买一艘船,具体在哪买待确定
         } else if (robot_num >= robot_max_num &&  boat_num < boat_max_num) {
-            isNeedBuyBoat = boat_purchase_point.size() - 1;  // TODO 后面买的船,具体在哪买待确定
+            isNeedBuyBoat = 0;  // TODO 后面买的船,具体在哪买待确定
         }
     }
-    // TODO 判断是否需要买机器人(后续封装成函数),返回值为-1表示不需要买机器人,返回0表示在第一个点买,返回1表示在第二个点买...
-    // TODO 判断机器人运货比例，如果[1-（机器人平均运货价值/时间）/（货物平均生成价值 /时间）]*参数（例15000）>机器人价格 &&船没有达到运输能力的上限，购买新机器人
-    //  TODO 还可以加几种不同的方式到时候试试。
-    if(money >= 2000 && isNeedBuyBoat == -1 && robot_num < robot_max_num) {
+    if(money >= 2000 && isNeedBuyBoat == -1 && robot_num < robot_max_num && robot_num >= 8) {
         isNeedBuyRobot = step % robot_purchase_point.size() ;  // TODO 买机器人,具体在哪买待确定
     }
 
     if(isNeedBuyBoat != -1) {
-        buy->buy_boat(0);
+        buy->buy_boat(isNeedBuyBoat);
     }
     if (isNeedBuyRobot != -1) {
         buy->buy_robot(isNeedBuyRobot);
