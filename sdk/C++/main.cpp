@@ -7,6 +7,103 @@ using namespace std;
  */
 int money, boat_capacity, step, zhen;  // 当前金钱数、船的容量、当前实际运行帧数(系统读入，会进行覆盖)
 int berth_num, robot_num, boat_num, total_value;  // 码头数、机器人数、船数(系统读入，会进行覆盖)
+int robot_max_num;
+int boat_max_num;
+int map_index;
+bool init_finished[20], all_init_finished;
+
+string maps[] = {
+    "#.#............#.##.##.##.##.##.##.##.#..........###..........#.##.##.##.##.##.##.##.#...........KKKK********************************************************************************************************************************************************************************************************........##.....##.................##.....##.............##.....##.................##.....##.....#.#",
+    "###...........############.############...........############.############............############.############...........############.############...........############.############.....#***~~~~***###...........#.......................#...........#.......................#............#.......................#...........#.......................#...........#.......................#.....#***~~~~***",
+    "****...........#.......................#...........#.......................#....................***********.................#.......................#...........#.......................#...........********...........#.......................#...........#.......................#....................***********.................#.......................#...........#.......................#...........****"
+};
+
+//todo:机器人所属泊位，与机器人数量匹配
+vector<vector<int>> board_seq[3] ={
+        {
+                {4},
+                 {4},
+                 {1},
+                 {1},
+                 {0},
+                 {0},
+                 {2,3},
+                 {2,3},
+                 {4},
+                 {4},
+                 {4},
+                 {1, 4},
+                 {1, 4},
+                 {1, 4},
+                 {0, 1, 3},
+                 {0, 1, 3},
+                 {0, 1, 2, 3, 4},
+                 {0, 1, 2, 3, 4}
+           /*
+                {0, 1, 2, 3, 4},
+                {0, 1, 2, 3, 4},
+                {0, 1, 2, 3, 4},
+                {0, 1, 2, 3, 4},
+                {0, 1, 2, 3, 4},
+                {0, 1, 2, 3, 4},
+                {0, 1, 2, 3, 4},
+                {0, 1, 2, 3, 4},
+                {0, 1, 2, 3, 4},
+                {0, 1, 2, 3, 4},
+                {0, 1, 2, 3, 4},
+                {0, 1, 2, 3, 4},
+                {0, 1, 2, 3, 4},
+                {0, 1, 2, 3, 4},
+                {0, 1, 2, 3, 4},
+                {0, 1, 2, 3, 4},
+                {0, 1, 2, 3, 4},
+                {0, 1, 2, 3, 4}
+                */
+        },
+        {       {0},
+                {0},
+                {1},
+                {2, 3},
+                {2, 3},
+                {3, 4},
+                {4, 5},
+                {3, 4},
+
+                {2},
+                {2},
+                {1},
+                {2},
+                {0},
+                {1},
+                {0},
+                {1},
+                {3},
+                {4},
+                {5},
+        },
+        {
+                {0, 1, 2, 3},
+                {0, 1, 2, 3},
+                {0, 1, 2, 3},
+                {0, 1, 2, 3},
+                {0, 1, 2, 3},
+                {0, 1, 2, 3},
+                {0, 1, 2, 3},
+                {0, 1, 2, 3},
+                {0, 1, 2, 3},
+                {0, 1, 2, 3},
+                {0, 1, 2, 3},
+                {0, 1, 2, 3},
+                {0, 1, 2, 3},
+                {0, 1, 2, 3},
+                {0, 1, 2, 3},
+                {0, 1, 2, 3},
+                {0, 1, 2, 3},
+                {0, 1, 2, 3}
+        }
+};
+
+int belong_berth_num[10];
 
 /*
  * 地图货物信息，机器人专用定义区
@@ -18,6 +115,7 @@ long long all_goods_val;
 int total_banyun_num;
 int value_radio[21];
 int ban_value_radio[21];
+
 
 map<std::pair<int, int>, int> Berth2ID;
 map<pair<int, int>, int> KaoBerth2ID;
@@ -40,7 +138,7 @@ int boat_to_berth_hCost[15][N][N][5];
 
 int robot_to_berth_hCost[15][N][N];
 
-
+bool finalTime = false;
 /**
  * 轮船进行A*算法的全局变量，定义在此为了避免栈内存空间不够用
  */
@@ -121,11 +219,11 @@ void ProcessMap() {
         for (int j = 0; j < n; j++) {
             if (grid[i][j] == 'R')
                 robot_purchase_point.push_back(make_pair(i, j));
-            else if (grid[i][j] == 'S')
+            if (grid[i][j] == 'S')
                 boat_purchase_point.push_back(make_pair(i, j));
-            else if (grid[i][j] == 'T')
+            if (grid[i][j] == 'T')
                 delivery_point.push_back(make_pair(i, j));
-            else if (grid[i][j] == 'B') {
+            /*if (grid[i][j] == 'B') {
                 if (check(i - 2, j - 1) && grid[i -2][j - 1] == 'B') {
                     for (int k = 0; k < berth_num; k++) {
                         if (berth[k]->x >= i - 2 && berth[k]->x <= i && berth[k]->y >= j - 1 && berth[k]->y <= j) {
@@ -149,14 +247,14 @@ void ProcessMap() {
                         }
                     }
                 }
-            }
-            else if(grid[i][j] == 'c' || grid[i][j] == '~' || grid[i][j] == 'S' || grid[i][j] == 'K' || grid[i][j] == 'T' || grid[i][j] == 'B') {
+            }*/
+            if(grid[i][j] == 'c' || grid[i][j] == '~' || grid[i][j] == 'S' || grid[i][j] == 'K' || grid[i][j] == 'T' || grid[i][j] == 'B') {
                 slow_points[make_pair(i, j)] = true;
             }
         }
     }
 
-    // 对泊位的靠泊区进行预处理
+    /*// 对泊位的靠泊区进行预处理
     for (int i = 0; i < berth_num; i++) {
         // TODO 后续再考虑是否出现越界的极端情况
         if  (grid[berth[i]->lux - 3][berth[i]->luy - 2] == 'K') {
@@ -183,13 +281,9 @@ void ProcessMap() {
             berth[i]->krdx = berth[i]->rdx + 2;
             berth[i]->krdy = berth[i]->rdy + 3;
         }
-    }
-    std::vector<std::thread> threads_2;
-    threads_2.emplace_back(ProcessMapBerthPoint);
-    // ProcessMapBerthPoint();
-    for(auto& t : threads_2) {
-        t.detach();
-    }
+    }*/
+    std::thread threads_2(ProcessMapBerthPoint);
+    threads_2.detach();
 }
 
 
@@ -197,12 +291,38 @@ void ProcessMap() {
  * 项目初始化
  */
 void Init() {
+
+
     exec = new execute();
     buy = new Buy();
 
+    string curMap;
     for (int i = 0; i < n; i++) {
         scanf("%s", grid[i]);
+        if(i == 41 || i == 123) curMap += string(grid[i]);
     }
+    for(int i = 0; i < 3; i++) {
+        if(maps[i] == curMap) map_index = i;
+    }
+    if(map_index == 0) {
+        robot_max_num = 18;
+        boat_max_num = 2;
+    }
+    else if(map_index == 1) {
+        robot_max_num = 19;
+        boat_max_num = 2;
+    }
+    else if(map_index == 2) {
+        robot_max_num = 18;
+        boat_max_num = 1;
+    }
+    else {
+        robot_max_num = 18;
+        boat_max_num = 1;
+    }
+    warn << "当前地图是" << map_index << endl;
+
+
     scanf("%d", &berth_num);
     for (int i = 0; i < berth_num; i++) {
         berth[i] = new Berth();
@@ -212,6 +332,7 @@ void Init() {
         info << "berth[" << i << "]:" << berth[i]->id << " " << berth[i]->x << " " << berth[i]->y << " " << berth[i]->loading_speed << endl;
     }
     ProcessMap();  // 对地图进行预处理
+
     scanf("%d", &boat_capacity);
     info  << "boat_capacity:" << boat_capacity << endl;
     char okk[100];
@@ -230,7 +351,7 @@ void Input() {
     for (int i = 0; i < num; i++) {
         int x, y, val;
         scanf("%d%d%d", &x, &y, &val);
-        if(val <= 20) continue;
+        if(val <= 0) continue;
 
         value_radio[val / 10] ++;
 
@@ -238,20 +359,36 @@ void Input() {
         gds[x][y] = val;
         all_goods_val += val;
         total_value += val;
-        goods_vanish_time[x][y] = step + 1000;
+        goods_vanish_time[x][y] = step + 995;
 
         int dis = 0x3f3f3f3f;
         int nearest_berth = -1;
-        for(int j = 0; j < berth_num; j++) {
-            int dis_temp = robot_to_berth_hCost[j][x][y] >= 10000 ? abs(x - berth[j]->x) + abs(y - berth[j]->y) : robot_to_berth_hCost[j][x][y];
-            if (dis_temp < dis) {
-                dis = dis_temp;
-                nearest_berth = j;
+        if (all_init_finished) {
+            for(int j = 0; j < berth_num; j++) {
+                int dis_temp = robot_to_berth_hCost[j][x][y] >= 10000 ? abs(x - berth[j]->x) + abs(y - berth[j]->y) : robot_to_berth_hCost[j][x][y];
+                if (dis_temp < dis) {
+                    dis = dis_temp;
+                    nearest_berth = j;
+                }
             }
+            belong_berth_num[nearest_berth] ++;
+            info << "goods_infos.size():" << goods_infos.size() << endl;
+            goods_infos.push_back({x, y, val, step + 995, false, nearest_berth});
+            info << "goods_infos.size():" << goods_infos.size() << endl;
         }
-        info << "goods_infos.size():" << goods_infos.size() << endl;
-        goods_infos.push_back({x, y, val, step + 1000, false, nearest_berth});
-        info << "goods_infos.size():" << goods_infos.size() << endl;
+        else {
+            for(int j = 0; j < berth_num; j++) {
+                int dis_temp = robot_to_berth_hCost[j][x][y] >= 10000 ? abs(x - berth[j]->x) + abs(y - berth[j]->y) : robot_to_berth_hCost[j][x][y];
+                if (dis_temp < dis) {
+                    dis = dis_temp;
+                    nearest_berth = j;
+                }
+            }
+            belong_berth_num[nearest_berth] ++;
+            info << "goods_infos.size():" << goods_infos.size() << endl;
+            goods_infos.push_back({x, y, val, step + 995, false, nearest_berth});
+            info << "goods_infos.size():" << goods_infos.size() << endl;
+        }
 
     }
     scanf("%d", &robot_num);
@@ -279,7 +416,13 @@ void update(int step) {
             }
         }
     }
-    goods_infos.erase(std::remove_if(goods_infos.begin(), goods_infos.end(), [&](const GoodsInfo &o){ return o.vanish_time <= step; }), goods_infos.end());
+    goods_infos.erase(std::remove_if(goods_infos.begin(), goods_infos.end(), [&](const GoodsInfo &o){ return o.vanish_time - 5 <= step; }), goods_infos.end());
+    all_init_finished = true;
+    for(int i = 0; i < berth_num; i++) {
+        if(init_finished[i] == false) {
+            all_init_finished = false;
+        }
+    }
 }
 
 int threadNum = 0;
@@ -309,6 +452,8 @@ int main() {
     Init();
 
     pre_process();
+
+    auto start = time_start_debug();
 
     int preStep = 0;
     for(step = 1; step <= 15000; step++) {
@@ -343,6 +488,7 @@ int main() {
         // 输入
         Input();
 
+
         // 更新
         update(step);
 
@@ -351,19 +497,22 @@ int main() {
 
         // 执行机器人指令
         info << "execute robot begin" << endl;
-        if (step > robot_max_num) exec->execute_robot();
+        if (step > 10) exec->execute_robot();
         info << "execute robot done" << endl;
 
         // 执行轮船指令
         // 执行轮船指令
+
         info << "execute boat begin" << endl;
-        if (step > 60) exec->execute_boat();
+        if (step > 200) {exec->execute_boat();}
         info << "execute boat done" << endl;
+
 
         // 执行购买指令
         info << "execute buy begin" << endl;
-        exec->execute_buy();
+        if (step > 2) exec->execute_buy();
         info << "execute buy done" << endl;
+
 
         info << "boat_num:"<< boat_num << " robot_num:" << robot_num << endl;
         info << "step: " << step << " end" << endl;
@@ -433,6 +582,13 @@ int main() {
         info << i * 10 << "到" << (i + 1) * 10 << "的已搬运货物数量:" << ban_value_radio[i] << endl;
     }
 
+    for(int i = 0; i < berth_num; i++) {
+        info << "泊位" << i << "的货物数量：" << belong_berth_num[i] << endl;
+    }
+
+    for(int i = 0; i < boat_num; i++) {
+        info << "船只" << i << "的货物数量：" << boat[i]->goods_num << ", 货物价值：" << boat[i]->goodsPrice << endl;
+    }
     info << "总货物数量: " << all_goods_cnt << endl;
     info << "运到码头的货物数量: " << total_banyun_num << endl;
     info << "总货物价值:" << total_value << endl;

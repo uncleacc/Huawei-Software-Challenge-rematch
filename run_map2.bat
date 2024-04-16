@@ -1,1 +1,1 @@
-.\SemiFinalJudge.exe -m maps\map2.txt .\sdk\C++\build\main.exe -l ERR && pause
+.\SemiFinalJudge.exe -m maps\map2.txt .\sdk\C++2\build\main.exe -l ERR -s 10 && pause

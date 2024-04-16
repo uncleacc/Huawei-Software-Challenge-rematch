@@ -51,10 +51,13 @@ const int n = 200;
 const int N = 210;
 const int M = 100;
 const int boat_price = 8000, robot_price = 2000;
+extern bool init_finished[20], all_init_finished;
+
+extern int robot_max_num;
+extern int boat_max_num;
 
 
-const int robot_max_num = 18;
-const int boat_max_num = 1;
+extern bool finalTime;
 
 extern int value_radio[21];
 extern int ban_value_radio[21];
@@ -74,6 +77,8 @@ extern std::map<std::pair<int, int>, int> originalValue;
 extern std::map<std::pair<int, int>, bool> slow_points;
 extern map<std::pair<int, int>, int> Berth2ID;
 extern map<pair<int, int>, int> KaoBerth2ID;
+extern vector<vector<int>> board_seq[3];
+extern int map_index;
 
 
 // extern char exist_id[N][N][15001];

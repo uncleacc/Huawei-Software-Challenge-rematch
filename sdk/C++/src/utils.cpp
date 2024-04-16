@@ -228,7 +228,6 @@ bool check_boat_loc_slow(int x, int y, int idx) {
     std::vector<pair<int, int>> points = get_boat_loc(x, y, idx);
     bool res = false;
     for(int i = 0; i < points.size(); i++) {
-        if(check(points[i].first, points[i].second) == false) return false;
         if(slow_points.find({points[i].first, points[i].second}) != slow_points.end()) res = true;
     }
     return res;
@@ -290,18 +289,22 @@ void close_berth(int berth_id) {
  * (x, y)是否是berth[berth_id]的靠泊区
  */
 bool locate_berth_area(int x, int y, int berth_id) {
-    if (berth[berth_id]->klux <= x && berth[berth_id]->kluy <= y
+    if (KaoBerth2ID.find({x, y}) != KaoBerth2ID.end()) return true;
+    if(Berth2ID.find({x, y}) != Berth2ID.end() ) return true;
+    return false;
+    /*if (berth[berth_id]->klux <= x && berth[berth_id]->kluy <= y
         && berth[berth_id]->krdx >= x  && berth[berth_id]->krdy>= y
         ) {
 
         return true;
     }
-    return false;
+    return false;*/
 }
 
 void pre_process() {
     memset(boat_to_deliver_hCost, 0x3f, sizeof boat_to_deliver_hCost);
-    memset(boat_to_berth_hCost, 0x3f, sizeof boat_to_berth_hCost);// 创建线程对象的容器
+    memset(boat_to_berth_hCost, 0x3f, sizeof boat_to_berth_hCost);
+    // 创建线程对象的容器
     std::vector<std::thread> threads;
     for(int i = 0; i < delivery_point.size(); i++) {
         // sea_flood_algorithm(i, delivery_point[i].first, delivery_point[i].second);
@@ -312,6 +315,7 @@ void pre_process() {
         threads.emplace_back(berth_flood_algorithm, i);
         threads.emplace_back(robot_berth_flood_algorithm, i);
     }
+
     // 分离所有线程
     for(auto& t : threads) {
         t.detach();
@@ -462,8 +466,6 @@ void sea_flood_algorithm(int id, int sx, int sy) {
             q.push({nx, ny, ndir, ndis});
         }
     }
-
-
 }
 
 /*
@@ -514,11 +516,19 @@ void robot_berth_flood_algorithm(int berth_id) {
             robot_to_berth_hCost[berth_id][nx][ny] = robot_to_berth_hCost[berth_id][x][y] + 1;
         }
     }
+    init_finished[berth_id] = true;
 }
 
 double get_metrics(int value, int distance, int dis_1, int dis_2, int vanishtime) {
+    // double r1 = 8, r2 = 2, r3 = 4;
+    // if(all_init_finished) {
+    //     return r1 * value * 1.0 / 200 + r2 * dis_1 * 1.0 / (dis_1 + dis_2 + 1) + r3 * (1000 - (vanishtime - step)) * 1.0 / 1000;
+    // }
+    // else {
     double r1 = 8, r2 = 4, r3 = 2;
-    return r1 * value * 1.0 / 200 + r2 * (200 - distance) * 1.0 / 200 + r3 * (1000 - (vanishtime - step)) * 1.0 / 1000;
+        return r1 * value * 1.0 / 200 + r2 * (200 - distance) * 1.0 / 200 + r3 * (1000 - (vanishtime - step)) * 1.0 / 1000;
+    // }
+
     // double rValue = 1.0, rDistance = 1.0, rDis1 = 1.0, rDis2 = 1.0, rVanishTime = 1.0;
     // distance++;
     // dis_1++;

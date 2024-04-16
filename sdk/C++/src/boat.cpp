@@ -582,9 +582,16 @@ bool Boat::go_mb_point(int berth_id, int DeliveryPointId, int oriMbx, int oriMby
 
             if (choice == 0 && locate_berth_area(now.x, now.y, berth_id)){
                 operation_list.push_back(BERTH_OP);
+                if (!nextBerth.empty()) {
+                    info << berth_id << "号泊位已经被锁定" << endl;
+                    berth[berth_id]->is_locked = true;
+                    nextBerth.erase(find(nextBerth.begin(), nextBerth.end(), berth_id)); // 从列表中删除此泊位
+                }
             }
+            vector<int> op_debug;
             while (boat_node_path[now.x][now.y][now.dir].x != -1) {
                 operation_list.push_back(get_operation(boat_node_path[now.x][now.y][now.dir].dir, now.dir));
+                    op_debug.push_back(get_operation(boat_node_path[now.x][now.y][now.dir].dir, now.dir));
                 int cur_ts = now.gCost;
                 boat_set_obstacle(now.x, now.y, now.dir, step + now.gCost);
                 int preX = now.x, preY = now.y, preDir = now.dir;
@@ -592,17 +599,38 @@ bool Boat::go_mb_point(int berth_id, int DeliveryPointId, int oriMbx, int oriMby
                 int pre_ts = now.gCost;
                 if(pre_ts + 2 == cur_ts) {  // 经过了减速区
                     boat_set_obstacle(preX, preY, preDir, step + now.gCost + 1);
+                        op_debug.push_back(9);
                 }
             }
             reverse(operation_list.begin(), operation_list.end());
             info << id << "号船找到了目标，操作序列长度如下:" << operation_list.size() << endl;
-            // for (int i = 0; i < operation_list.size(); i++) {
-            //     info << step + i << ": " << get_operation_debug(operation_list[i]) << endl;
-            // }
+
+            reverse(op_debug.begin(), op_debug.end());
+            int tmpX = now.x, tmpY = now.y, tmpDir = now.dir;
+            for (int i = 0; i < op_debug.size(); i++) {
+                info << step + i << ": " << get_operation_debug(op_debug[i]) << endl;
+                if(op_debug[i] == FORWARD_OP) {
+                    tmpX = tmpX + d[tmpDir].x;
+                    tmpY = tmpY + d[tmpDir].y;
+                }
+                else if(op_debug[i] == CLOCKWISE_DIR_OP) {
+                    tmpX = get_rotated_point(tmpX, tmpY, tmpDir, CLOCKWISE_DIR_OP).first;
+                    tmpY = get_rotated_point(tmpX, tmpY, tmpDir, CLOCKWISE_DIR_OP).second;
+                    tmpDir = get_clockwise(tmpDir);
+                }
+                else if(op_debug[i] == ANTICLOCKWISE_DIR_OP) {
+                    tmpX = get_rotated_point(tmpX, tmpY, tmpDir, ANTICLOCKWISE_DIR_OP).first;
+                    tmpY = get_rotated_point(tmpX, tmpY, tmpDir, ANTICLOCKWISE_DIR_OP).second;
+                    tmpDir = get_anticlockwise(tmpDir);
+                }
+                info << step + i << ": " << tmpX << " " << tmpY << " " << tmpDir << endl;
+            }
+
             if(choice == 0) {
                 info << id << "号船要去" << berth_id << "号泊位" << endl;
                 // close_berth(berth_id);   //其他的船不可以去berth_id
                 // add_berth(berth_id);
+                info << berth_id << "号泊位已经被锁定" << endl;
                 berth[berth_id]->set_locked(true);
             }
             else if(choice == 1) info << id << "号船要去" << DeliveryPointId << "号交货点" << endl;
@@ -613,83 +641,91 @@ bool Boat::go_mb_point(int berth_id, int DeliveryPointId, int oriMbx, int oriMby
 
 
 
-        int nx, ny, rt_dir, gCost, hCost;
+        int nx, ny, gCost, hCost;
         int ndir;
         std::pair<int, int> rotated_xy;
         bool flag11 = true;
         bool flag2 = true;
+        bool flag3 = false;
 
 
         //顺时针旋转
         flag11 = true;
         flag2 = true;
+        flag3 = false;
         rotated_xy = get_rotated_point(now.x, now.y, now.dir, CLOCKWISE_DIR_OP);
 
-        rt_dir = get_clockwise(now.dir);
+        ndir = get_clockwise(now.dir);
         nx = rotated_xy.first; ny = rotated_xy.second;
         gCost = now.gCost + 1;
-        flag11 = can_place_boat(nx, ny, rt_dir, step + gCost) && !boat_vis[nx][ny][rt_dir];
-
-        if(check_boat_loc_slow(nx, ny, rt_dir)) { //从缓慢区出去的时候会停滞一帧
+        flag11 = can_place_boat(nx, ny, ndir, step + gCost)
+                && can_place_boat(now.x, now.y, now.dir, step + gCost)
+                && can_place_boat(nx, ny, ndir, step + now.gCost)
+                && !boat_vis[nx][ny][ndir];
+        flag3 = check_boat_can_loc_dir(nx, ny, ndir);
+        if(check_boat_loc_slow(nx, ny, ndir)) { //从缓慢区出去的时候会停滞一帧
             gCost++;
-            flag2 = can_place_boat(nx, ny, rt_dir, step + gCost) && !boat_vis[nx][ny][rt_dir];
+            flag2 = can_place_boat(nx, ny, ndir, step + gCost) && !boat_vis[nx][ny][ndir];
         }
         // if (can_place_boat(nx, ny, rt_dir, step + gCost) && !boat_vis[nx][ny][rt_dir]) {
-        if (flag11 && flag2) {
-            boat_vis[nx][ny][rt_dir] = true;
-            // hCost = abs(nx + d[rt_dir].x - mbx) + abs(ny + d[rt_dir].y - mby);
-            // hCost = abs(nx + 2 * d[rt_dir].x - mbx) + abs(ny +  2 * d[rt_dir].y - mby) ;
-            // hCost = abs(nx + 2 * d[rt_dir].x - mbx) + abs(ny +  2 * d[rt_dir].y - mby)  + abs(nx + 2 * d[get_clockwise(rt_dir)].x - mbx) + abs(ny +  2 * d[rt_dir].y - mby);
-            // hCost = abs(nx + 2 * d[rt_dir].x - mbx) + abs(ny +  2 * d[rt_dir].y - mby) ;
-            if(choice == 0) hCost =  boat_to_berth_hCost[berth_id][nx][ny][rt_dir];
-            else if(choice == 1) hCost = boat_to_deliver_hCost[DeliveryPointId][nx][ny][rt_dir];
-            q.push({nx, ny, rt_dir,  gCost, hCost});
-            boat_node_path[nx][ny][rt_dir] = now;
+        if (flag11 && flag2 && flag3) {
+            boat_vis[nx][ny][ndir] = true;
+            if(choice == 0) hCost =  boat_to_berth_hCost[berth_id][nx][ny][ndir];
+            else if(choice == 1) hCost = boat_to_deliver_hCost[DeliveryPointId][nx][ny][ndir];
+            q.push({nx, ny, ndir,  gCost, hCost});
+            boat_node_path[nx][ny][ndir] = now;
 
         }
 
         //逆时针旋转
         flag11 = true;
         flag2 = true;
+        flag3 = false;
+
         rotated_xy = get_rotated_point(now.x, now.y, now.dir, ANTICLOCKWISE_DIR_OP);
-        rt_dir = get_anticlockwise(now.dir);
+        ndir = get_anticlockwise(now.dir);
         nx = rotated_xy.first; ny = rotated_xy.second;
         gCost = now.gCost + 1;
-        flag11 = can_place_boat(nx, ny, rt_dir, step + gCost) && !boat_vis[nx][ny][rt_dir];
+        flag11 = can_place_boat(nx, ny, ndir, step + gCost)
+                && can_place_boat(now.x, now.y, now.dir, step + gCost)
+                && can_place_boat(nx, ny, ndir, step + now.gCost)
+                && !boat_vis[nx][ny][ndir];
+        flag3 = check_boat_can_loc_dir(nx, ny, ndir);
 
-        if(check_boat_loc_slow(nx, ny, rt_dir)) { //从缓慢区出去的时候会停滞一帧
+        if(check_boat_loc_slow(nx, ny, ndir)) { //从缓慢区出去的时候会停滞一帧
             gCost++;
-            flag2 = can_place_boat(nx, ny, rt_dir, step + gCost) && !boat_vis[nx][ny][rt_dir];
+            flag2 = can_place_boat(nx, ny, ndir, step + gCost) && !boat_vis[nx][ny][ndir];
         }
         // if (can_place_boat(nx, ny, rt_dir, step + gCost) && !boat_vis[nx][ny][rt_dir]) {
-        if (flag11 && flag2) {
-            boat_vis[nx][ny][rt_dir] = true;
-            // hCost = abs(nx + d[rt_dir].x - mbx) + abs(ny + d[rt_dir].y - mby);
-            // hCost = abs(nx +  2 * d[rt_dir].x - mbx) + abs(ny +  2 * d[rt_dir].y - mby);
-            // hCost = abs(nx + 2 * d[rt_dir].x - mbx) + abs(ny +  2 * d[rt_dir].y - mby)  + abs(nx + 2 * d[get_clockwise(rt_dir)].x - mbx) + abs(ny +  2 * d[rt_dir].y - mby);
-            // hCost = abs(nx +  2 * d[rt_dir].x - mbx) + abs(ny +  2 * d[rt_dir].y - mby);
-            if(choice == 0) hCost =  boat_to_berth_hCost[berth_id][nx][ny][rt_dir];
-            else if(choice == 1) hCost = boat_to_deliver_hCost[DeliveryPointId][nx][ny][rt_dir];
-            q.push({nx, ny, rt_dir, gCost, hCost});
-            boat_node_path[nx][ny][rt_dir] = now;
+        if (flag11 && flag2 && flag3) {
+            boat_vis[nx][ny][ndir] = true;
+            if(choice == 0) hCost =  boat_to_berth_hCost[berth_id][nx][ny][ndir];
+            else if(choice == 1) hCost = boat_to_deliver_hCost[DeliveryPointId][nx][ny][ndir];
+            q.push({nx, ny, ndir, gCost, hCost});
+            boat_node_path[nx][ny][ndir] = now;
 
         }
 
         //前进
         flag11 = true;
         flag2 = true;
+        flag3 = false;
         nx = now.x + d[now.dir].x;
         ny = now.y + d[now.dir].y;
         ndir = now.dir;
         gCost = now.gCost + 1;
-        flag11 = can_place_boat(nx, ny, ndir, step + gCost) && !boat_vis[nx][ny][now.dir];
+        flag11 = can_place_boat(nx, ny, ndir, step + gCost)
+                && can_place_boat(now.x, now.y, now.dir, step + gCost)
+                && can_place_boat(nx, ny, ndir, step + now.gCost)
+                && !boat_vis[nx][ny][ndir];
+        flag3 = check_boat_can_loc_dir(nx, ny, ndir);
 
         if(check_boat_loc_slow(nx, ny, ndir)) { //从缓慢区出去的时候会停滞一帧
             gCost++;
             flag2 = can_place_boat(nx, ny, ndir, step + gCost) && !boat_vis[nx][ny][now.dir];
         }
         // if (can_place_boat(nx, ny, rt_dir, step + gCost) && !boat_vis[nx][ny][rt_dir]) {
-        if (flag11 && flag2) {
+        if (flag11 && flag2 && flag3) {
             boat_vis[nx][ny][now.dir] = true;
             // hCost = abs(nx - mbx) + abs(ny - mby);
             // hCost = abs(nx + d[now.dir].x - mbx) + abs(ny + d[now.dir].y - mby);
@@ -705,7 +741,7 @@ bool Boat::go_mb_point(int berth_id, int DeliveryPointId, int oriMbx, int oriMby
 
     }
 
-    info << id << "号船寻路花费了 " << time_end_debug(start_time) << " 毫秒（且没有找到路径）" << endl;
+    info << id << "号船寻路花费了 " << time_end_debug(start_time) << " 毫秒（且没有找到路径）,一共遍历了" << qCount<< endl;
     return false;
 }
 
@@ -733,6 +769,21 @@ void Boat::exec(int op) {
         printf("ship %d\n", id);
         x += d[dir].x;
         y += d[dir].y;
+        vector<pair<int, int>> points = get_boat_loc(x, y, dir);
+        for (int i = 0; i < boat_num; i++) {
+            if(i != id) {
+                vector<pair<int, int>> otherPoints = get_boat_loc(boat[i]->x, boat[i]->y, boat[i]->dir);
+                bool flag = false;
+                for(int j = 0; j < points.size(); j++) {
+                    if(find(otherPoints.begin(), otherPoints.end(), points[j]) != otherPoints.end()) {
+                        flag = true;
+                        break;
+                    }
+                }
+                if(flag) error << "船" << id << "在" << step << "帧发生了碰撞" << endl;
+            }
+        }
+
         info <<  "Boat " << id << " ship" << " x:" <<  x  << " y:" << y << "  dir:" << dir << " mbx:" <<  mbx  << " mby:" << mby << endl;
     }
     else if(op == ANTICLOCKWISE_DIR_OP) {
@@ -741,6 +792,21 @@ void Boat::exec(int op) {
         dir = get_anticlockwise(dir);
         x = rotated_xy.first;
         y = rotated_xy.second;
+
+        vector<pair<int, int>> points = get_boat_loc(x, y, dir);
+        for (int i = 0; i < boat_num; i++) {
+            if(i != id) {
+                vector<pair<int, int>> otherPoints = get_boat_loc(boat[i]->x, boat[i]->y, boat[i]->dir);
+                bool flag = false;
+                for(int j = 0; j < points.size(); j++) {
+                    if(find(otherPoints.begin(), otherPoints.end(), points[j]) != otherPoints.end()) {
+                        flag = true;
+                        break;
+                    }
+                }
+                if(flag) error << "船" << id << "在" << step << "帧发生了碰撞" << endl;
+            }
+        }
         info <<  "Boat " << id << " rot" << " x:" <<  x  << " y:" << y << "  dir:" << dir << " mbx:" <<  mbx  << " mby:" << mby << endl;
     }
     else if(op == CLOCKWISE_DIR_OP) {
@@ -749,6 +815,25 @@ void Boat::exec(int op) {
         dir = get_clockwise(dir);
         x = rotated_xy.first;
         y = rotated_xy.second;
+
+        vector<pair<int, int>> points = get_boat_loc(x, y, dir);
+        for (int i = 0; i < boat_num; i++) {
+            if(i != id) {
+                vector<pair<int, int>> otherPoints = get_boat_loc(boat[i]->x, boat[i]->y, boat[i]->dir);
+                bool flag = false;
+                for(int j = 0; j < points.size(); j++) {
+                    if(find(otherPoints.begin(), otherPoints.end(), points[j]) != otherPoints.end()) {
+                        flag = true;
+                        break;
+                    }
+                }
+                if(flag) {
+                    error << "船" << id << "在" << step << "帧发生了碰撞" << endl;
+                    boat[i]->mbBerthId = -1;
+
+                }
+            }
+        }
         info <<  "Boat " << id << " rot" << " x:" <<  x  << " y:" << y << "  dir:" << dir << " mbx:" <<  mbx  << " mby:" << mby << endl;
 
     }
@@ -766,9 +851,7 @@ void Boat::exec(int op) {
         mby = -1;
         info <<  "Boat " << id << " berth" << " x:" <<  x  << " y:" << y << "  dir:" << dir << " mbx:" <<  mbx  << " mby:" << mby << endl;
     }
-    if(other_boat_is_here_debug(x, y, dir)) {
-        error << "Boat " << id << " 发生撞击" << endl;
-    }
+
 }
 
 /**
@@ -832,15 +915,50 @@ int Boat::find_max_goods() {
     return maxBerthId;
 }
 
+int Boat::find_max_seq(std::vector<std::vector<int>> seqs) {
+    if(seqs.empty()) return -1; // 序列为空
+    int mx = -1, res_id = -1, id = 0;
+    for(auto &v : seqs) {
+
+        int sum = 0;
+        error << "泊位序列" << endl;
+        for(int i = 0; i < v.size(); i++) {
+            error << v[i] << endl;
+            if(!berth[v[i]]->is_locked) sum += berth[v[i]]->num;
+        }
+        if(sum > mx) {
+            mx = sum;
+            res_id = id;
+        }
+        id++;
+    }
+    error << "最终选择的序列: " << res_id << endl;
+    return res_id;
+}
+
 int Boat::find_nearest_delivery_id() {
     int res = 0;
-    int dis = boat_to_deliver_hCost[0][x][y][dir];
-    if(id == 0) error << "find_nearest_delivery_id: " << dis << endl;
-    for (int i = 1; i < delivery_point.size(); i++) {
+    int dis = 1000;
+    // if(id == 0) error << "find_nearest_delivery_id: " << dis << endl;
+    for (int i = 0; i < delivery_point.size(); i++) {
         if (boat_to_deliver_hCost[i][x][y][dir] < dis) {
             res = i;
             dis = boat_to_deliver_hCost[i][x][y][dir];
         }
     }
+    if (res == -1) error << "find_nearest_delivery_id: " << -1 << endl;
+    return res;
+}
+int Boat::find_nearest_berth_id(){
+    int res = -1;
+    int dis = 1000;
+//    if(id == 0) error << "find_nearest_Berth: " << dis << endl;
+    for (int i = 0; i < berthBoard.size(); i++) {
+        if (boat_to_berth_hCost[i][x][y][dir] < dis && boat_to_berth_hCost[i][x][y][dir]>0) {
+            res = i;
+            dis = boat_to_berth_hCost[i][x][y][dir];
+        }
+    }
+
     return res;
 }

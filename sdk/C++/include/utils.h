@@ -118,7 +118,7 @@ void robot_set_obstacle(int x, int y, int ts);
 void step_compensate_compute(int time);*/
 
 void pre_process();
-
+void ProcessMapBerthPoint();
 /*void sea_flood_algorithm(int id, int x, int y);*/
 void sea_flood_algorithm(int id, int x, int y);
 

@@ -24,8 +24,14 @@ void Robot::initialize() {
     haveTarget = false;
     searchGdsNumber = 10;
     findLength = 0;
-    for(int i = 0; i < berth_num; i++) boards.push_back(i);
+    // for(int i = 0; i < berth_num; i++) boards.push_back(i);
     is_first_move = true;
+    boards = board_seq[map_index][id];
+    info << "机器人" << id << "可以去的泊位有：";
+    for(int i = 0; i < boards.size(); i++) {
+        info << boards[i] << " ";
+    }
+    info << endl;
 }
 
 int Robot::goto_mbp() {
@@ -89,19 +95,22 @@ void Robot::put_good() {
     info << "机器人:" << id << " " << getBerthId() << endl;
     mbx = -1;
     mby = -1;
-    int berth_id = getBerthId();
-    berth[berth_id]->num++;
-    berth[berth_id]->price += price;
-    berth[berth_id]->berthGoodsPrice.push_back(price);
-    goods = 0;
-    printf("pull %d\n", id);
+    if (getBerthId() != -1){
+        int berth_id = getBerthId();
+        berth[berth_id]->num++;
+        berth[berth_id]->price += price;
+        berth[berth_id]->berthGoodsPrice.push_back(price);
+        goods = 0;
+        printf("pull %d\n", id);
+        total_banyun_num ++;
+        ban_value_radio[price / 10] ++;
+        berth[berth_id]->history_cnt ++;
+        price = 0;
+    }
 
 
-    total_banyun_num ++;
-    ban_value_radio[price / 10] ++;
-    berth[berth_id]->history_cnt ++;
 
-    price = 0;
+
 
 }
 
@@ -406,7 +415,7 @@ int Robot::getBerthId() {
 int Robot::find_mbGoodsPoint() {
 
     if (boards.size() <= 0) {
-        return -1;
+        return -2;
     }
     if (mbx == -1 && mby == -1) {
         return -2;
@@ -637,6 +646,10 @@ void Robot::set_goods_for_mb() {
     for(auto &it : goods_infos) {
         if(it.locked || it.value < 10) continue;
         int gx = it.x, gy = it.y, gv = it.value, g_berthid = it.nearest_berth;
+        if(std::find(boards.begin(), boards.end(), g_berthid) == boards.end()) {
+            //机器人不能去g_berthid码头
+            continue;
+        }
         // info << "gx:" << gx << " gy:" << gy << " gv:" << gv << " g_berthid:" << g_berthid << endl;
         int currentBerthId = getBerthId();
         int dis = 0;
@@ -646,18 +659,25 @@ void Robot::set_goods_for_mb() {
             dis = robot_to_berth_hCost[currentBerthId][gx][gy] + robot_to_berth_hCost[g_berthid][gx][gy];
             dis_1 = robot_to_berth_hCost[currentBerthId][gx][gy];
             dis_2 = robot_to_berth_hCost[g_berthid][gx][gy];
+            if(dis_1 > 1000 || dis_2 > 1000) {
+                continue;
+            }
         } else {
+            info << "currentBerthId = -1" << endl;
             dis = abs(x - gx) + abs(y - gy) + robot_to_berth_hCost[g_berthid][gx][gy];
             dis_1 = abs(x - gx) + abs(y - gy);
             dis_2 = robot_to_berth_hCost[g_berthid][gx][gy];
+            if(dis_1 > 1000 || dis_2 > 1000) {
+                continue;
+            }
         }
         // if(get_metrics(it.value, dis, it.vanish_time) < 0) {
-        if(get_metrics(it.value, dis, dis_1, dis_2, it.vanish_time) < 0) {
+        if(get_metrics(gv, dis, dis_1, dis_2, it.vanish_time) < 0) {
             // error << "负数:" << get_metrics(it.value, dis, dis_1, dis_2, it.vanish_time) <<  endl;
         }
-        if (get_metrics(it.value, dis, dis_1, dis_2, it.vanish_time) > max_metrics) {
+        if (get_metrics(gv, dis, dis_1, dis_2, it.vanish_time) > max_metrics) {
             // error << "正数:" << get_metrics(it.value, dis, dis_1, dis_2, it.vanish_time) <<  endl;
-            max_metrics = get_metrics(it.value, dis,dis_1, dis_2, it.vanish_time);
+            max_metrics = get_metrics(gv, dis,dis_1, dis_2, it.vanish_time);
             mbx = gx;
             mby = gy;
         }
@@ -678,7 +698,8 @@ int Robot:: set_berth_for_mb() {
     for (int i = 0; i < boards.size(); i++) {
         int berthId = boards[i];
         int dis_temp = robot_to_berth_hCost[berthId][x][y];
-        if (dis_temp < dis) {
+        int flag = finalTime && berth[berthId]->num < boat_capacity;
+        if (dis_temp < dis && !flag) {
             dis = dis_temp;
             target_berthId = berthId;
         }

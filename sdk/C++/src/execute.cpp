@@ -117,7 +117,7 @@ void execute::execute_robot() {
                 info << "set_berth_for_mb end" << endl;
 
                 error << "find berth begin" << endl;
-                robot[i]->find_mbBerthPoint(target_berthId);
+                if (target_berthId != -1) robot[i]->find_mbBerthPoint(target_berthId);
                 error << "find berth end" << endl;
             }
         }
@@ -138,11 +138,255 @@ void execute::execute_robot() {
     }
 }
 
+void schedule_map1_1(int i){
+    if (boat[i]->goods_num == 0 && boat[i]->nextBerth.empty()) {
+        boat[i]->nextBerth = {1, 4};
+    } else {
+        boat[i]->nextBerth = {2, 3, 0};
+    }
+
+    // 无论是否载有货物，都执行以下逻辑
+    // 确保nextBerth不为空
+    if (!boat[i]->nextBerth.empty()) {
+        int targetBerth = boat[i]->nextBerth.front(); // 取出第一个元素为目标泊位
+        boat[i]->nextBerth.erase(boat[i]->nextBerth.begin()); // 从列表中删除第一个元素
+
+        info << "Boat " << " 预备港口，准备前往 " << targetBerth << endl;
+        boat[i]->go_mb_point(targetBerth, -1, berth[targetBerth]->x,
+                             berth[targetBerth]->y, 0);
+    } else {
+        // 如果nextBerth为空，则打印错误或执行其他逻辑
+        error << "Boat " << boat[i]->id << " has no berth target" << endl;
+        int target=boat[i]->find_nearest_delivery_id();
+        boat[i]->go_mb_point(-1, target, delivery_point[target].first,
+                             delivery_point[target].second, 1);
+    }
+}
+
+void schedule_map1_2(int i){
+    info << "标记一下" << boat[i]->goods_num << " " << boat[i]->nextBerth.size() << endl;
+    if (boat[i]->goods_num == 0 && boat[i]->nextBerth.empty()) {
+        vector<vector<int>> seqs = {{1, 4}, {0, 3, 2}};   // map1
+        // vector<vector<int>> seqs = {{0, 4, 1}, {2, 3, 5}};   // map2
+        // vector<vector<int>> seqs = {{0}, {1}, {2}, {3}};   // map3
+        int seq_id = boat[i]->find_max_seq(seqs);
+        vector<int> seq = seqs[seq_id];
+        if(boat_to_berth_hCost[seq[0]][boat[i]->x][boat[i]->y][boat[i]->dir] < boat_to_berth_hCost[seq[seq.size() - 1]][boat[i]->x][boat[i]->y][boat[i]->dir]) {
+            boat[i]->nextBerth = seq;
+        } else {
+            reverse(seq.begin(), seq.end());
+            boat[i]->nextBerth = seq;
+        }
+      /*  if (berthtarget==1||berthtarget==4){
+            if (boat_to_berth_hCost[1][boat[i]->x][boat[i]->y][boat[i]->dir] < boat_to_berth_hCost[4][boat[i]->x][boat[i]->y][boat[i]->dir]) {
+                boat[i]->nextBerth = {1, 4};
+            }
+            else {
+                boat[i]->nextBerth = {4, 1};
+            }
+        }
+        else{
+            if (boat_to_berth_hCost[0][boat[i]->x][boat[i]->y][boat[i]->dir] < boat_to_berth_hCost[2][boat[i]->x][boat[i]->y][boat[i]->dir]) {
+                boat[i]->nextBerth = {0, 3, 2};
+            }
+            else{
+                boat[i]->nextBerth = {2, 3, 0};
+            }
+        }*/
+    }
+
+    // 无论是否载有货物，都执行以下逻辑
+    // 确保nextBerth不为空
+    if (!boat[i]->nextBerth.empty()) {
+        int targetBerth = boat[i]->nextBerth.front(); // 取出第一个元素为目标泊位
+        if (berth[targetBerth]->is_locked == false) {
+            // boat[i]->nextBerth.erase(boat[i]->nextBerth.begin()); // 从列表中删除第一个元素
+            info << "Boat " << " 预备港口，准备前往 " << targetBerth << endl;
+            boat[i]->set_mbp(berth[targetBerth]->x, berth[targetBerth]->y);
+            boat[i]->go_mb_point(targetBerth, -1, berth[targetBerth]->x,
+                                 berth[targetBerth]->y, 0);
+            // berth[targetBerth]->is_locked = true;
+        } else {
+            info << "删除" << boat[i]->nextBerth.front() << endl;
+            boat[i]->nextBerth.erase(boat[i]->nextBerth.begin()); // 从列表中删除第一个元素
+        }
+
+    }
+    else {
+        // 如果nextBerth为空，则打印错误或执行其他逻辑
+        error << "Boat " << boat[i]->id << " has no berth target!!!" << endl;
+        int target=boat[i]->find_nearest_delivery_id();
+        boat[i]->nextBerth.clear();
+        boat[i]->go_mb_point(-1, target, delivery_point[target].first,
+                             delivery_point[target].second, 1);
+    }
+}
+
+void schedule_map2_1(int i){
+    if (boat[i]->goods_num == 0 && boat[i]->nextBerth.empty()) {
+        int target = boat[i]->find_max_goods();
+        if (target == 0) {
+            boat[i]->nextBerth = {0, 1};
+        } else if (target == 1) {
+            if (berth[1]->num < 35) {
+                boat[i]->nextBerth = {1, 5};
+            } else {
+                boat[i]->nextBerth = {1};
+            }
+        } else if (target == 2) {
+            boat[i]->nextBerth = {2, 3};
+        } else if (target == 3) {
+            if (berth[4]->num + berth[5]->num > berth[1]->num) {
+                boat[i]->nextBerth = {3, 4, 5};
+            } else {
+                boat[i]->nextBerth = {3, 1};
+            }
+        } else if (target == 4) {
+            boat[i]->nextBerth = {4, 5};
+        } else if (target == 5) {
+            boat[i]->nextBerth = {5};
+        }
+    }
+    // 无论是否载有货物，都执行以下逻辑
+    // 确保nextBerth不为空
+    if (!boat[i]->nextBerth.empty()) {
+        int targetBerth = boat[i]->nextBerth.front(); // 取出第一个元素为目标泊位
+        if (berth[targetBerth]->is_locked == false) {
+            // boat[i]->nextBerth.erase(boat[i]->nextBerth.begin()); // 从列表中删除第一个元素
+            info << "Boat " << " 预备港口，准备前往 " << targetBerth << endl;
+            boat[i]->go_mb_point(targetBerth, -1, berth[targetBerth]->x,
+                                 berth[targetBerth]->y, 0);
+            // berth[targetBerth]->is_locked = true;
+        } else {
+            boat[i]->nextBerth.erase(boat[i]->nextBerth.begin()); // 从列表中删除第一个元素
+        }
+
+    } else {
+        // 如果nextBerth为空，则打印错误或执行其他逻辑
+        error << "Boat " << boat[i]->id << " has no berth target!!!" << endl;
+        int target=boat[i]->find_nearest_delivery_id();
+        boat[i]->nextBerth.clear();
+        boat[i]->go_mb_point(-1, target, delivery_point[target].first,
+                             delivery_point[target].second, 1);
+    }
+}
+void schedule_map2_2(int i){
+    if (boat[i]->goods_num == 0 && boat[i]->nextBerth.empty()) {
+        // vector<vector<int>> seqs = {{1, 4}, {0, 3, 2}};   // map1
+        vector<vector<int>> seqs = {{0, 4, 1}, {2, 3, 5}};   // map2
+        // vector<vector<int>> seqs = {{0}, {1}, {2}, {3}};   // map3
+        int seq_id = boat[i]->find_max_seq(seqs);
+        vector<int> seq = seqs[seq_id];
+        if(boat_to_berth_hCost[seq[0]][boat[i]->x][boat[i]->y][boat[i]->dir] < boat_to_berth_hCost[seq[seq.size() - 1]][boat[i]->x][boat[i]->y][boat[i]->dir]) {
+            boat[i]->nextBerth = seq;
+        } else {
+            reverse(seq.begin(), seq.end());
+            boat[i]->nextBerth = seq;
+        }
+        /*  if (berthtarget==1||berthtarget==4){
+              if (boat_to_berth_hCost[1][boat[i]->x][boat[i]->y][boat[i]->dir] < boat_to_berth_hCost[4][boat[i]->x][boat[i]->y][boat[i]->dir]) {
+                  boat[i]->nextBerth = {1, 4};
+              }
+              else {
+                  boat[i]->nextBerth = {4, 1};
+              }
+          }
+          else{
+              if (boat_to_berth_hCost[0][boat[i]->x][boat[i]->y][boat[i]->dir] < boat_to_berth_hCost[2][boat[i]->x][boat[i]->y][boat[i]->dir]) {
+                  boat[i]->nextBerth = {0, 3, 2};
+              }
+              else{
+                  boat[i]->nextBerth = {2, 3, 0};
+              }
+          }*/
+    }
+
+    // 无论是否载有货物，都执行以下逻辑
+    // 确保nextBerth不为空
+    if (!boat[i]->nextBerth.empty()) {
+        int targetBerth = boat[i]->nextBerth.front(); // 取出第一个元素为目标泊位
+        if (berth[targetBerth]->is_locked == false) {
+            // boat[i]->nextBerth.erase(boat[i]->nextBerth.begin()); // 从列表中删除第一个元素
+            info << "Boat " << " 预备港口，准备前往 " << targetBerth << endl;
+            boat[i]->go_mb_point(targetBerth, -1, berth[targetBerth]->x,
+                                 berth[targetBerth]->y, 0);
+            // berth[targetBerth]->is_locked = true;
+        } else {
+            boat[i]->nextBerth.erase(boat[i]->nextBerth.begin()); // 从列表中删除第一个元素
+        }
+
+    } else {
+        // 如果nextBerth为空，则打印错误或执行其他逻辑
+        error << "Boat " << boat[i]->id << " has no berth target!!!" << endl;
+        int target=boat[i]->find_nearest_delivery_id();
+        boat[i]->nextBerth.clear();
+        boat[i]->go_mb_point(-1, target, delivery_point[target].first,
+                             delivery_point[target].second, 1);
+    }
+}
+void schedule_map3_2(int i){
+    if (boat[i]->goods_num == 0 && boat[i]->nextBerth.empty()) {
+        // vector<vector<int>> seqs = {{1, 4}, {0, 3, 2}};   // map1
+        // vector<vector<int>> seqs = {{0, 4, 1}, {2, 3, 5}};   // map2
+        vector<vector<int>> seqs = {{0}, {1}, {2}, {3}};   // map3
+        int seq_id = boat[i]->find_max_seq(seqs);
+        vector<int> seq = seqs[seq_id];
+        if(boat_to_berth_hCost[seq[0]][boat[i]->x][boat[i]->y][boat[i]->dir] < boat_to_berth_hCost[seq[seq.size() - 1]][boat[i]->x][boat[i]->y][boat[i]->dir]) {
+            boat[i]->nextBerth = seq;
+        } else {
+            reverse(seq.begin(), seq.end());
+            boat[i]->nextBerth = seq;
+        }
+        /*  if (berthtarget==1||berthtarget==4){
+              if (boat_to_berth_hCost[1][boat[i]->x][boat[i]->y][boat[i]->dir] < boat_to_berth_hCost[4][boat[i]->x][boat[i]->y][boat[i]->dir]) {
+                  boat[i]->nextBerth = {1, 4};
+              }
+              else {
+                  boat[i]->nextBerth = {4, 1};
+              }
+          }
+          else{
+              if (boat_to_berth_hCost[0][boat[i]->x][boat[i]->y][boat[i]->dir] < boat_to_berth_hCost[2][boat[i]->x][boat[i]->y][boat[i]->dir]) {
+                  boat[i]->nextBerth = {0, 3, 2};
+              }
+              else{
+                  boat[i]->nextBerth = {2, 3, 0};
+              }
+          }*/
+    }
+
+    // 无论是否载有货物，都执行以下逻辑
+    // 确保nextBerth不为空
+    if (!boat[i]->nextBerth.empty()) {
+        int targetBerth = boat[i]->nextBerth.front(); // 取出第一个元素为目标泊位
+        if (berth[targetBerth]->is_locked == false) {
+            // boat[i]->nextBerth.erase(boat[i]->nextBerth.begin()); // 从列表中删除第一个元素
+            info << "Boat " << " 预备港口，准备前往 " << targetBerth << endl;
+            boat[i]->go_mb_point(targetBerth, -1, berth[targetBerth]->x,
+                                 berth[targetBerth]->y, 0);
+            // berth[targetBerth]->is_locked = true;
+        } else {
+            boat[i]->nextBerth.erase(boat[i]->nextBerth.begin()); // 从列表中删除第一个元素
+        }
+
+    } else {
+        // 如果nextBerth为空，则打印错误或执行其他逻辑
+        error << "Boat " << boat[i]->id << " has no berth target!!!" << endl;
+        int target=boat[i]->find_nearest_delivery_id();
+        boat[i]->nextBerth.clear();
+        boat[i]->go_mb_point(-1, target, delivery_point[target].first,
+                             delivery_point[target].second, 1);
+    }
+}
+
 void execute::execute_boat() {
+    info << "execute_boat() begin" << endl;
     for (int i = 0; i < boat_num; ++i) {
-        int delivery_id = i == 0 ? delivery_point.size() -1 : 0;  // map2
-        if (boat[i]->x == delivery_point[delivery_id].first && boat[i]->y == delivery_point[delivery_id].second) {
-            boat[i]->goodsPrice = 0;
+        for (int j = 0; j < delivery_point.size(); j++) {
+            int delivery_id = j;  // map2
+            if (boat[i]->x == delivery_point[delivery_id].first && boat[i]->y == delivery_point[delivery_id].second) {
+                boat[i]->goodsPrice = 0;
+            }
         }
         if (boat[i]->mbx == -1 && boat[i]->mby == -1) {
             for (int j = 0; j < delivery_point.size(); j++) {
@@ -154,7 +398,7 @@ void execute::execute_boat() {
                 info  << "Boat " << boat[i]->id << " loading" << endl;
                 int currentBerthId = boat[i]->getBerthIdByPoint();
                 info << "currentBerthId:" << currentBerthId << endl;
-                if (berth[currentBerthId]->num <= 0 || boat[i]->goods_num >= boat_capacity || step >= 14700) {  // TODO 后续要封装成是否离开当前泊位的函数   boat[i]->goods_num == boat_capacity
+                if (berth[currentBerthId]->num <= 0 || boat[i]->goods_num >= boat_capacity ) {  // TODO 后续要封装成是否离开当前泊位的函数   boat[i]->goods_num == boat_capacity
                     boat[i]->operation_list.push_back(DEPT_OP);
                 } else {
                     // 先执行船舶命令，再进行装载!!!!!!!,一旦发送回到主航道的指令后续无法装载
@@ -170,18 +414,41 @@ void execute::execute_boat() {
             else if(boat[i]->status == 0) {
                 bool isCanBuyRobot = (robot_num >= 8 && robot_num < robot_max_num && boat[i]->goodsPrice + money >= 2000);
                 // 去送货点
-                if(boat[i]->goods_num >= boat_capacity ||  step >= 14700 || isCanBuyRobot) {
+                // if(boat[i]->goods_num >= boat_capacity ||  step >= 14700 || isCanBuyRobot) {
+                if(boat[i]->goods_num >= boat_capacity || isCanBuyRobot) {
+                    boat[i]->nextBerth.clear();
                     info << "Boat " << boat[i]->id << "的价值: " << boat[i]->goodsPrice << " 数量: " << boat[i]->goods_num << endl;
                     int delivery_id = boat[i]->find_nearest_delivery_id();  // map2
                     info <<  "Boat " << boat[i]->id << " find nearest delivery id " << delivery_id << endl;
                     boat[i]->go_mb_point(-1,delivery_id, delivery_point[delivery_id].first, delivery_point[delivery_id].second, 1);
                 }
-                    // 去泊位
+                // 去泊位
                 else {
-                    int maxBerthId = boat[i]->find_max_goods();
+                    /*int maxBerthId = boat[i]->find_max_goods();
+                    boat[i]->mbBerthId = maxBerthId;
                     info << "Boat " << boat[i]->id << " find maxBerthId " << maxBerthId << endl;
                     if(maxBerthId != -1) boat[i]->go_mb_point(maxBerthId, -1, berth[maxBerthId]->x, berth[maxBerthId]->y,0);
-                    else error << "船" << boat[i]->id << "没有找到目标泊位" << endl;                }
+                    else error << "船" << boat[i]->id << "没有找到目标泊位" << endl;*/
+                    if(map_index == 0) {
+                        // schedule_map1_1(i);
+                        info << "Boat " << boat[i]->id << " schedule_map1_1  " << map_index << endl;
+                        schedule_map1_2(i);
+                    }
+                    else if(map_index == 1) {
+                        info << "Boat " << boat[i]->id << " schedule_map2_1  " << map_index << endl;
+                        schedule_map2_1(i);
+                        // schedule_map2_2(i);
+                    }
+                    else if(map_index == 2) {
+                        info << "Boat " << boat[i]->id << " schedule_map3_1  " << map_index << endl;
+                        schedule_map3_2(i);
+                    }
+                    else {
+                        error << "地图出错了" << endl;
+                        // exit(-1);
+                        //todo: 盲图的方案
+                    }
+                }
             }
         }
         info << "Boat " << boat[i]->id << " begin move" << endl;

@@ -21,6 +21,8 @@ public:
     int find_max_goods();
     int getBerthIdByPoint();
     int find_nearest_delivery_id();
+    int find_nearest_berth_id();
+    int find_max_seq(std::vector<std::vector<int>> seqs);
 
 
 public:
@@ -36,6 +38,8 @@ public:
 
     std::vector<int> berthBoard;
     std::vector<int> operation_list;  // 0: 前进，1: 左转，2: 右转
+    std::vector<int> nextBerth;
+
 };
 
 #endif
